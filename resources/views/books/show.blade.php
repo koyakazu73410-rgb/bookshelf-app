@@ -28,9 +28,9 @@
                             <div class="flex items-start justify-between mb-4">
                                 <h1 class="text-2xl font-bold">{{ $book->title }}</h1>
 
-                                <!-- お気に入りボタン -->
+                                    <!-- お気に入りボタン -->
                                 @auth
-                                    @if(Auth::user()->favoriteBooks->contains($book->id))
+                                    @if($isFavorited)
                                         <form action="{{ route('favorites.toggle', $book) }}" method="POST" novalidate>
                                             @csrf
                                             <button type="submit" class="text-red-500 hover:text-red-700" title="お気に入りから削除">
@@ -160,14 +160,14 @@
                                         <div class="mt-3 flex items-center justify-between">
                                             <!-- いいねボタン -->
                                             @auth
-                                                @if(Auth::user()->likedReviews->contains($review->id))
+                                                @if($review->liked_by_current_user)
                                                     <form action="{{ route('reviews.like', $review) }}" method="POST" class="inline" novalidate>
                                                         @csrf
                                                         <button type="submit" class="text-blue-500 hover:text-blue-700 text-sm flex items-center">
                                                             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" fill="currentColor" viewBox="0 0 20 20">
                                                                 <path d="M2 10.5a1.5 1.5 0 113 0v6a1.5 1.5 0 01-3 0v-6zM6 10.333v5.43a2 2 0 001.106 1.79l.05.025A4 4 0 008.943 18h5.416a2 2 0 001.962-1.608l1.2-6A2 2 0 0015.56 8H12V4a2 2 0 00-2-2 1 1 0 00-1 1v.667a4 4 0 01-.8 2.4L6.8 7.933a4 4 0 00-.8 2.4z"/>
                                                             </svg>
-                                                            いいね済み ({{ $review->likedByUsers->count() }})
+                                                            いいね済み ({{ $review->liked_users_count }})
                                                         </button>
                                                     </form>
                                                 @else
@@ -177,7 +177,7 @@
                                                             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 20 20">
                                                                 <path stroke-linecap="round" stroke-linejoin="round" d="M2 10.5a1.5 1.5 0 113 0v6a1.5 1.5 0 01-3 0v-6zM6 10.333v5.43a2 2 0 001.106 1.79l.05.025A4 4 0 008.943 18h5.416a2 2 0 001.962-1.608l1.2-6A2 2 0 0015.56 8H12V4a2 2 0 00-2-2 1 1 0 00-1 1v.667a4 4 0 01-.8 2.4L6.8 7.933a4 4 0 00-.8 2.4z"/>
                                                             </svg>
-                                                            いいね ({{ $review->likedByUsers->count() }})
+                                                            いいね ({{ $review->liked_users_count }})
                                                         </button>
                                                     </form>
                                                 @endif
@@ -186,7 +186,7 @@
                                                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 20 20">
                                                         <path stroke-linecap="round" stroke-linejoin="round" d="M2 10.5a1.5 1.5 0 113 0v6a1.5 1.5 0 01-3 0v-6zM6 10.333v5.43a2 2 0 001.106 1.79l.05.025A4 4 0 008.943 18h5.416a2 2 0 001.962-1.608l1.2-6A2 2 0 0015.56 8H12V4a2 2 0 00-2-2 1 1 0 00-1 1v.667a4 4 0 01-.8 2.4L6.8 7.933a4 4 0 00-.8 2.4z"/>
                                                     </svg>
-                                                    いいね ({{ $review->likedByUsers->count() }})
+                                                    いいね ({{ $review->liked_users_count }})
                                                 </a>
                                             @endauth
 

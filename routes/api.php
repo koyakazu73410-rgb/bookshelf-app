@@ -1,6 +1,6 @@
 <?php
 
-use Illuminate\Http\Request;
+use App\Http\Controllers\Api\V1\BookController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -14,6 +14,14 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
-    return $request->user();
+Route::prefix('v1')->group(function () {
+    Route::get('/books', [BookController::class, 'index']);
+    Route::post('/books', [BookController::class, 'store']);
+
+    Route::get('/books/{book}', [BookController::class, 'show'])
+        ->missing(fn () => response()->json(['message' => '書籍が見つかりません。'], 404));
+    Route::put('/books/{book}', [BookController::class, 'update'])
+        ->missing(fn () => response()->json(['message' => '書籍が見つかりません。'], 404));
+    Route::delete('/books/{book}', [BookController::class, 'destroy'])
+        ->missing(fn () => response()->json(['message' => '書籍が見つかりません。'], 404));
 });
