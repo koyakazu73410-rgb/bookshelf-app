@@ -1,0 +1,262 @@
+{
+  "info": {
+    "_postman_id": "2f1e6eb3-d59d-49a4-a942-1e6eb3d59d49",
+    "name": "Bookshelf API v1",
+    "description": "Bookshelf API v1の面談・動作確認用Collectionです。GETは公開、POST・PUT・DELETEはSanctum Bearer Token認証を使用します。正常系は上から順に実行してください。",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:81", "type": "string" },
+    { "key": "bearerToken", "value": "", "type": "string" },
+    { "key": "otherUserBearerToken", "value": "", "type": "string" },
+    { "key": "invalidBearerToken", "value": "invalid-postman-token", "type": "string" },
+    { "key": "protectedBookId", "value": "", "type": "string" },
+    { "key": "genreId", "value": "1", "type": "string" },
+    { "key": "existingBookId", "value": "1", "type": "string" },
+    { "key": "createdBookId", "value": "", "type": "string" },
+    { "key": "testIsbn", "value": "", "type": "string" },
+    { "key": "duplicateIsbn", "value": "9784101010014", "type": "string" },
+    { "key": "missingBookId", "value": "999999999", "type": "string" }
+  ],
+  "item": [
+    {
+      "name": "正常系",
+      "description": "一覧・検索・詳細・登録・更新・削除を確認します。登録→更新→削除は順番どおりに実行してください。",
+      "item": [
+        {
+          "name": "GET 書籍一覧 [200]",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json", "type": "text" }],
+            "url": { "raw": "{{baseUrl}}/api/v1/books", "host": ["{{baseUrl}}"], "path": ["api", "v1", "books"] },
+            "description": "最新順の書籍一覧を取得します。期待HTTPステータス: 200"
+          },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('HTTP 200', () => pm.response.to.have.status(200));", "pm.test('dataとmetaを返す', () => { const json = pm.response.json(); pm.expect(json.data).to.be.an('array'); pm.expect(json.meta).to.be.an('object'); });"] } }]
+        },
+        {
+          "name": "GET キーワード検索 [200]",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json", "type": "text" }],
+            "url": { "raw": "{{baseUrl}}/api/v1/books?keyword=夏目", "host": ["{{baseUrl}}"], "path": ["api", "v1", "books"], "query": [{ "key": "keyword", "value": "夏目", "description": "タイトルまたは著者の部分一致" }] },
+            "description": "titleまたはauthorを部分一致検索します。期待HTTPステータス: 200"
+          },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('HTTP 200', () => pm.response.to.have.status(200));", "pm.test('検索結果は配列', () => pm.expect(pm.response.json().data).to.be.an('array'));"] } }]
+        },
+        {
+          "name": "GET ジャンル検索 [200]",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json", "type": "text" }],
+            "url": { "raw": "{{baseUrl}}/api/v1/books?genre_id={{genreId}}", "host": ["{{baseUrl}}"], "path": ["api", "v1", "books"], "query": [{ "key": "genre_id", "value": "{{genreId}}", "description": "存在するジャンルID" }] },
+            "description": "指定ジャンルに紐づく書籍を取得します。期待HTTPステータス: 200"
+          },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('HTTP 200', () => pm.response.to.have.status(200));", "pm.test('検索結果は配列', () => pm.expect(pm.response.json().data).to.be.an('array'));"] } }]
+        },
+        {
+          "name": "GET ページネーション [200]",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json", "type": "text" }],
+            "url": { "raw": "{{baseUrl}}/api/v1/books?page=1&per_page=5", "host": ["{{baseUrl}}"], "path": ["api", "v1", "books"], "query": [{ "key": "page", "value": "1" }, { "key": "per_page", "value": "5" }] },
+            "description": "1ページ5件で取得します。期待HTTPステータス: 200"
+          },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('HTTP 200', () => pm.response.to.have.status(200));", "pm.test('最大5件', () => pm.expect(pm.response.json().data.length).to.be.at.most(5));", "pm.test('現在ページは1', () => pm.expect(pm.response.json().meta.current_page).to.eql(1));"] } }]
+        },
+        {
+          "name": "GET 書籍詳細 [200]",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json", "type": "text" }],
+            "url": { "raw": "{{baseUrl}}/api/v1/books/:book_id", "host": ["{{baseUrl}}"], "path": ["api", "v1", "books", ":book_id"], "variable": [{ "key": "book_id", "value": "{{existingBookId}}", "description": "存在する書籍ID" }] },
+            "description": "レビューを含む書籍詳細を取得します。期待HTTPステータス: 200"
+          },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('HTTP 200', () => pm.response.to.have.status(200));", "pm.test('書籍データを返す', () => { const data = pm.response.json().data; pm.expect(data.id).to.exist; pm.expect(data.genres).to.be.an('array'); pm.expect(data.reviews).to.be.an('array'); });"] } }]
+        },
+        {
+          "name": "POST 書籍登録 [201]",
+          "event": [
+            { "listen": "prerequest", "script": { "type": "text/javascript", "exec": ["const isbn = String(Date.now()).slice(-13).padStart(13, '0');", "pm.collectionVariables.set('testIsbn', isbn);"] } },
+            { "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('HTTP 201', () => pm.response.to.have.status(201));", "pm.test('登録IDを保存', () => { const data = pm.response.json().data; pm.expect(data.id).to.exist; pm.collectionVariables.set('createdBookId', String(data.id)); });", "pm.test('送信ISBNで登録', () => pm.expect(pm.response.json().data.isbn).to.eql(pm.collectionVariables.get('testIsbn')));"] } }
+          ],
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{bearerToken}}", "type": "string" }] },
+            "method": "POST",
+            "header": [{ "key": "Accept", "value": "application/json", "type": "text" }, { "key": "Content-Type", "value": "application/json", "type": "text" }],
+            "body": { "mode": "raw", "raw": "{\n  \"title\": \"Postman面談確認用書籍\",\n  \"author\": \"Postman Tester\",\n  \"isbn\": \"{{testIsbn}}\",\n  \"published_date\": \"2026-01-01\",\n  \"description\": \"Postman Collectionから作成した削除前提の確認データです。\",\n  \"image_url\": \"https://example.com/postman-book.jpg\",\n  \"genres\": [{{genreId}}]\n}", "options": { "raw": { "language": "json" } } },
+            "url": { "raw": "{{baseUrl}}/api/v1/books", "host": ["{{baseUrl}}"], "path": ["api", "v1", "books"] },
+            "description": "時刻から生成した13桁ISBNで書籍を登録し、返却されたIDをcreatedBookIdへ保存します。期待HTTPステータス: 201"
+          }
+        },
+        {
+          "name": "PUT 登録した書籍を更新 [200]",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{bearerToken}}", "type": "string" }] },
+            "method": "PUT",
+            "header": [{ "key": "Accept", "value": "application/json", "type": "text" }, { "key": "Content-Type", "value": "application/json", "type": "text" }],
+            "body": { "mode": "raw", "raw": "{\n  \"title\": \"Postman面談確認用書籍（更新済み）\",\n  \"author\": \"Postman Tester\",\n  \"isbn\": \"{{testIsbn}}\",\n  \"published_date\": \"2026-02-01\",\n  \"description\": \"更新APIの確認データです。\",\n  \"image_url\": \"https://example.com/postman-book-updated.jpg\",\n  \"genres\": [{{genreId}}]\n}", "options": { "raw": { "language": "json" } } },
+            "url": { "raw": "{{baseUrl}}/api/v1/books/:book_id", "host": ["{{baseUrl}}"], "path": ["api", "v1", "books", ":book_id"], "variable": [{ "key": "book_id", "value": "{{createdBookId}}", "description": "直前の登録APIが保存したID" }] },
+            "description": "Collectionが登録した書籍だけを更新します。期待HTTPステータス: 200"
+          },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('HTTP 200', () => pm.response.to.have.status(200));", "pm.test('タイトルが更新済み', () => pm.expect(pm.response.json().data.title).to.eql('Postman面談確認用書籍（更新済み）'));"] } }]
+        },
+        {
+          "name": "DELETE 登録した書籍を削除 [204]",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{bearerToken}}", "type": "string" }] },
+            "method": "DELETE",
+            "header": [{ "key": "Accept", "value": "application/json", "type": "text" }],
+            "url": { "raw": "{{baseUrl}}/api/v1/books/:book_id", "host": ["{{baseUrl}}"], "path": ["api", "v1", "books", ":book_id"], "variable": [{ "key": "book_id", "value": "{{createdBookId}}", "description": "Collection自身が登録した書籍ID" }] },
+            "description": "Collection自身が登録した確認データだけを削除します。期待HTTPステータス: 204"
+          },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('HTTP 204', () => pm.response.to.have.status(204));", "pm.test('レスポンス本文は空', () => pm.expect(pm.response.text()).to.eql(''));"] } }]
+        }
+      ]
+    },
+    {
+      "name": "異常系",
+      "description": "422および404レスポンスを確認します。ISBN重複はSeederの「吾輩は猫である」のISBNを初期値として利用します。",
+      "item": [
+        {
+          "name": "GET 存在しない書籍ID [404]",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json", "type": "text" }],
+            "url": { "raw": "{{baseUrl}}/api/v1/books/:book_id", "host": ["{{baseUrl}}"], "path": ["api", "v1", "books", ":book_id"], "variable": [{ "key": "book_id", "value": "{{missingBookId}}" }] },
+            "description": "存在しない書籍IDを指定します。期待HTTPステータス: 404"
+          },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('HTTP 404', () => pm.response.to.have.status(404));", "pm.test('書籍なしエラー', () => pm.expect(pm.response.json().error).to.eql('書籍が見つかりません。'));"] } }]
+        },
+        {
+          "name": "POST 必須項目不足 [422]",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{bearerToken}}", "type": "string" }] },
+            "method": "POST",
+            "header": [{ "key": "Accept", "value": "application/json", "type": "text" }, { "key": "Content-Type", "value": "application/json", "type": "text" }],
+            "body": { "mode": "raw", "raw": "{}", "options": { "raw": { "language": "json" } } },
+            "url": { "raw": "{{baseUrl}}/api/v1/books", "host": ["{{baseUrl}}"], "path": ["api", "v1", "books"] },
+            "description": "必須項目を送信しません。期待HTTPステータス: 422"
+          },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('HTTP 422', () => pm.response.to.have.status(422));", "pm.test('必須項目エラー', () => { const errors = pm.response.json().errors; ['title','author','genres'].forEach(key => pm.expect(errors).to.have.property(key)); });", "pm.test('任意項目は必須エラーにならない', () => { const errors = pm.response.json().errors; pm.expect(errors).not.to.have.property('isbn'); pm.expect(errors).not.to.have.property('published_date'); });"] } }]
+        },
+        {
+          "name": "POST 不正な入力値 [422]",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{bearerToken}}", "type": "string" }] },
+            "method": "POST",
+            "header": [{ "key": "Accept", "value": "application/json", "type": "text" }, { "key": "Content-Type", "value": "application/json", "type": "text" }],
+            "body": { "mode": "raw", "raw": "{\n  \"title\": \"不正入力確認\",\n  \"author\": \"Postman Tester\",\n  \"isbn\": \"123\",\n  \"published_date\": \"not-a-date\",\n  \"description\": [\"文字列ではありません\"],\n  \"image_url\": \"not-a-url\",\n  \"genres\": [999999999]\n}", "options": { "raw": { "language": "json" } } },
+            "url": { "raw": "{{baseUrl}}/api/v1/books", "host": ["{{baseUrl}}"], "path": ["api", "v1", "books"] },
+            "description": "存在しない外部キー、13桁でないISBN、不正日付・URL等を送信します。期待HTTPステータス: 422"
+          },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('HTTP 422', () => pm.response.to.have.status(422));", "pm.test('不正値の項目別エラー', () => { const errors = pm.response.json().errors; ['isbn','published_date','description','image_url','genres.0'].forEach(key => pm.expect(errors).to.have.property(key)); });"] } }]
+        },
+        {
+          "name": "POST ISBN重複 [422]",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{bearerToken}}", "type": "string" }] },
+            "method": "POST",
+            "header": [{ "key": "Accept", "value": "application/json", "type": "text" }, { "key": "Content-Type", "value": "application/json", "type": "text" }],
+            "body": { "mode": "raw", "raw": "{\n  \"title\": \"ISBN重複確認\",\n  \"author\": \"Postman Tester\",\n  \"isbn\": \"{{duplicateIsbn}}\",\n  \"published_date\": \"2026-01-01\",\n  \"description\": \"既存ISBNの重複確認です。\",\n  \"image_url\": \"https://example.com/duplicate.jpg\",\n  \"genres\": [{{genreId}}]\n}", "options": { "raw": { "language": "json" } } },
+            "url": { "raw": "{{baseUrl}}/api/v1/books", "host": ["{{baseUrl}}"], "path": ["api", "v1", "books"] },
+            "description": "既存書籍と同じISBNを送信します。期待HTTPステータス: 422"
+          },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('HTTP 422', () => pm.response.to.have.status(422));", "pm.test('ISBN重複エラー', () => pm.expect(pm.response.json().errors).to.have.property('isbn'));"] } }]
+        },
+        {
+          "name": "GET 不正な検索パラメータ [422]",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json", "type": "text" }],
+            "url": { "raw": "{{baseUrl}}/api/v1/books?keyword[]=array&genre_id=999999999&page=0&per_page=101", "host": ["{{baseUrl}}"], "path": ["api", "v1", "books"], "query": [{ "key": "keyword[]", "value": "array" }, { "key": "genre_id", "value": "999999999" }, { "key": "page", "value": "0" }, { "key": "per_page", "value": "101" }] },
+            "description": "文字列でないkeyword、存在しないgenre_id、範囲外のpage/per_pageを指定します。期待HTTPステータス: 422"
+          },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('HTTP 422', () => pm.response.to.have.status(422));", "pm.test('検索条件の項目別エラー', () => { const errors = pm.response.json().errors; ['keyword','genre_id','page','per_page'].forEach(key => pm.expect(errors).to.have.property(key)); });"] } }]
+        }
+      ]
+    },
+    {
+      "name": "認証・認可エラー",
+      "description": "Sanctumの未認証401、不正トークン401、非所有者403を確認します。protectedBookIdはbearerTokenのユーザーが所有する書籍を指定してください。",
+      "item": [
+        {
+          "name": "POST 未認証 [401]",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Accept", "value": "application/json", "type": "text" }, { "key": "Content-Type", "value": "application/json", "type": "text" }],
+            "body": { "mode": "raw", "raw": "{}", "options": { "raw": { "language": "json" } } },
+            "url": { "raw": "{{baseUrl}}/api/v1/books", "host": ["{{baseUrl}}"], "path": ["api", "v1", "books"] },
+            "description": "Bearer Tokenを付けずに登録を試みます。バリデーションより先に認証で拒否されます。期待HTTPステータス: 401"
+          },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('HTTP 401', () => pm.response.to.have.status(401));", "pm.test('JSONレスポンス', () => pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json'));"] } }]
+        },
+        {
+          "name": "PUT 未認証 [401]",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "PUT",
+            "header": [{ "key": "Accept", "value": "application/json", "type": "text" }, { "key": "Content-Type", "value": "application/json", "type": "text" }],
+            "body": { "mode": "raw", "raw": "{}", "options": { "raw": { "language": "json" } } },
+            "url": { "raw": "{{baseUrl}}/api/v1/books/:book_id", "host": ["{{baseUrl}}"], "path": ["api", "v1", "books", ":book_id"], "variable": [{ "key": "book_id", "value": "{{existingBookId}}", "description": "存在する書籍ID" }] },
+            "description": "Bearer Tokenを付けずに更新を試みます。期待HTTPステータス: 401"
+          },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('HTTP 401', () => pm.response.to.have.status(401));", "pm.test('JSONレスポンス', () => pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json'));"] } }]
+        },
+        {
+          "name": "DELETE 未認証 [401]",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "DELETE",
+            "header": [{ "key": "Accept", "value": "application/json", "type": "text" }],
+            "url": { "raw": "{{baseUrl}}/api/v1/books/:book_id", "host": ["{{baseUrl}}"], "path": ["api", "v1", "books", ":book_id"], "variable": [{ "key": "book_id", "value": "{{existingBookId}}", "description": "存在する書籍ID" }] },
+            "description": "Bearer Tokenを付けずに削除を試みます。期待HTTPステータス: 401"
+          },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('HTTP 401', () => pm.response.to.have.status(401));", "pm.test('JSONレスポンス', () => pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json'));"] } }]
+        },
+        {
+          "name": "POST 不正Bearer Token [401]",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{invalidBearerToken}}", "type": "string" }] },
+            "method": "POST",
+            "header": [{ "key": "Accept", "value": "application/json", "type": "text" }, { "key": "Content-Type", "value": "application/json", "type": "text" }],
+            "body": { "mode": "raw", "raw": "{}", "options": { "raw": { "language": "json" } } },
+            "url": { "raw": "{{baseUrl}}/api/v1/books", "host": ["{{baseUrl}}"], "path": ["api", "v1", "books"] },
+            "description": "実在しないBearer Tokenで登録を試みます。期待HTTPステータス: 401"
+          },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('HTTP 401', () => pm.response.to.have.status(401));", "pm.test('JSONレスポンス', () => pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json'));"] } }]
+        },
+        {
+          "name": "PUT 非所有者 [403]",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{otherUserBearerToken}}", "type": "string" }] },
+            "method": "PUT",
+            "header": [{ "key": "Accept", "value": "application/json", "type": "text" }, { "key": "Content-Type", "value": "application/json", "type": "text" }],
+            "body": { "mode": "raw", "raw": "{}", "options": { "raw": { "language": "json" } } },
+            "url": { "raw": "{{baseUrl}}/api/v1/books/:book_id", "host": ["{{baseUrl}}"], "path": ["api", "v1", "books", ":book_id"], "variable": [{ "key": "book_id", "value": "{{protectedBookId}}", "description": "bearerTokenのユーザーが所有する書籍ID" }] },
+            "description": "別ユーザーのTokenで所有者の書籍を更新しようとします。認可がバリデーションより先に拒否します。期待HTTPステータス: 403"
+          },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('HTTP 403', () => pm.response.to.have.status(403));", "pm.test('日本語の認可エラー', () => pm.expect(pm.response.json()).to.eql({error: 'この操作を行う権限がありません。'}));"] } }]
+        },
+        {
+          "name": "DELETE 非所有者 [403]",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{otherUserBearerToken}}", "type": "string" }] },
+            "method": "DELETE",
+            "header": [{ "key": "Accept", "value": "application/json", "type": "text" }],
+            "url": { "raw": "{{baseUrl}}/api/v1/books/:book_id", "host": ["{{baseUrl}}"], "path": ["api", "v1", "books", ":book_id"], "variable": [{ "key": "book_id", "value": "{{protectedBookId}}", "description": "bearerTokenのユーザーが所有する書籍ID" }] },
+            "description": "別ユーザーのTokenで所有者の書籍を削除しようとします。期待HTTPステータス: 403"
+          },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('HTTP 403', () => pm.response.to.have.status(403));", "pm.test('日本語の認可エラー', () => pm.expect(pm.response.json()).to.eql({error: 'この操作を行う権限がありません。'}));"] } }]
+        }
+      ]
+    }
+  ]
+}

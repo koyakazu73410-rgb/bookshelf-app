@@ -7,6 +7,9 @@ use Illuminate\Http\RedirectResponse;
 
 class ReviewLikeController extends Controller
 {
+    /**
+     * Toggle the authenticated user's like for another user's review.
+     */
     public function toggle(Review $review): RedirectResponse
     {
         if ($review->user_id === auth()->id()) {

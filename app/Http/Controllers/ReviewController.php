@@ -5,10 +5,15 @@ namespace App\Http\Controllers;
 use App\Http\Requests\ReviewRequest;
 use App\Models\Book;
 use App\Models\Review;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\View\View;
 
 class ReviewController extends Controller
 {
-    public function store(ReviewRequest $request, Book $book)
+    /**
+     * Store a review for the specified book.
+     */
+    public function store(ReviewRequest $request, Book $book): RedirectResponse
     {
         $validated = $request->validated();
 
@@ -17,19 +22,26 @@ class ReviewController extends Controller
         $validated['book_id'] = $book->id;
 
         Review::create($validated);
+
         return redirect()
-        ->route('books.show', $book)
-        ->with('success', 'レビューを投稿しました。');
+            ->route('books.show', $book)
+            ->with('success', 'レビューを投稿しました。');
     }
 
-    public function edit(Review $review)
+    /**
+     * Display the form for editing the specified review.
+     */
+    public function edit(Review $review): View
     {
         $this->authorize('update', $review);
 
         return view('reviews.edit', compact('review'));
     }
 
-    public function update(ReviewRequest $request, Review $review)
+    /**
+     * Update the specified review.
+     */
+    public function update(ReviewRequest $request, Review $review): RedirectResponse
     {
         $this->authorize('update', $review);
 
@@ -38,11 +50,14 @@ class ReviewController extends Controller
         $review->update($validated);
 
         return redirect()
-        ->route('books.show', $review->book)
-        ->with('success', 'レビューを更新しました。');
+            ->route('books.show', $review->book)
+            ->with('success', 'レビューを更新しました。');
     }
 
-    public function destroy(Review $review)
+    /**
+     * Delete the specified review.
+     */
+    public function destroy(Review $review): RedirectResponse
     {
         $this->authorize('delete', $review);
 
@@ -51,7 +66,7 @@ class ReviewController extends Controller
         $review->delete();
 
         return redirect()
-        ->route('books.show', $book)
-        ->with('success', 'レビューを削除しました。');
+            ->route('books.show', $book)
+            ->with('success', 'レビューを削除しました。');
     }
 }

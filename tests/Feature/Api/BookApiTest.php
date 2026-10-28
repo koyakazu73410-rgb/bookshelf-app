@@ -2,10 +2,11 @@
 
 namespace Tests\Feature\Api;
 
-use App\Models\User;
-use App\Models\Genre;
 use App\Models\Book;
+use App\Models\Genre;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Laravel\Sanctum\Sanctum;
 use Tests\TestCase;
 
 class BookApiTest extends TestCase
@@ -33,7 +34,7 @@ class BookApiTest extends TestCase
             'title' => 'Laravel実践',
         ]);
 
-        $response = $this->getJson('/api/v1/books/' . $book->id);
+        $response = $this->getJson('/api/v1/books/'.$book->id);
 
         $response->assertStatus(200);
 
@@ -45,9 +46,8 @@ class BookApiTest extends TestCase
     public function test_book_can_be_created_from_api(): void
     {
         $user = User::factory()->create();
-
-
         $genre = Genre::factory()->create();
+        Sanctum::actingAs($user);
 
         $data = Book::factory()->make()->only([
             'title',
@@ -58,7 +58,6 @@ class BookApiTest extends TestCase
             'image_url',
         ]);
 
-        $data['user_id'] = $user->id;
         $data['published_date'] = '2025-01-01';
         $data['genres'] = [$genre->id];
 
@@ -78,11 +77,10 @@ class BookApiTest extends TestCase
         $book = Book::factory()->create([
             'title' => '更新前の書籍',
         ]);
-
         $genre = Genre::factory()->create();
+        Sanctum::actingAs($book->user);
 
         $data = [
-            'user_id' => $book->user_id,
             'title' => '更新後の書籍',
             'author' => $book->author,
             'isbn' => $book->isbn,
@@ -90,7 +88,7 @@ class BookApiTest extends TestCase
             'genres' => [$genre->id],
         ];
 
-        $response = $this->putJson('/api/v1/books/' . $book->id, $data);
+        $response = $this->putJson('/api/v1/books/'.$book->id, $data);
 
         $response->assertStatus(200);
 
@@ -105,8 +103,9 @@ class BookApiTest extends TestCase
         $book = Book::factory()->create([
             'title' => '削除対象の書籍',
         ]);
+        Sanctum::actingAs($book->user);
 
-        $response = $this->deleteJson('/api/v1/books/' . $book->id);
+        $response = $this->deleteJson('/api/v1/books/'.$book->id);
 
         $response->assertNoContent();
 
