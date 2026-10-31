@@ -145,7 +145,7 @@ class BookIsbnSearchTest extends TestCase
 
         $this->actingAs(User::factory()->create())
             ->getJson(route('books.isbn.search', '9781234567890'))
-            ->assertStatus(502)
+            ->assertStatus(500)
             ->assertExactJson([
                 'error' => 'Google Books APIから書籍情報を取得できませんでした。手動で入力してください。',
             ]);

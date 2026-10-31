@@ -89,11 +89,11 @@ class BookController extends Controller
 
             return response()->json([
                 'error' => 'Google Books APIから書籍情報を取得できませんでした。手動で入力してください。',
-            ], 502);
+            ], 500);
         } catch (ConnectionException) {
             return response()->json([
                 'error' => 'Google Books APIから書籍情報を取得できませんでした。手動で入力してください。',
-            ], 502);
+            ], 500);
         }
 
         if ($book === null) {
