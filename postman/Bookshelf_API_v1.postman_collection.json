@@ -16,7 +16,13 @@
     { "key": "createdBookId", "value": "", "type": "string" },
     { "key": "testIsbn", "value": "", "type": "string" },
     { "key": "duplicateIsbn", "value": "9784101010014", "type": "string" },
-    { "key": "missingBookId", "value": "999999999", "type": "string" }
+    { "key": "missingBookId", "value": "999999999", "type": "string" },
+    { "key": "isbnSearchBaseUrl", "value": "http://localhost:81", "type": "string" },
+    { "key": "isbnStubBaseUrl", "value": "http://127.0.0.1:8081", "type": "string" },
+    { "key": "validIsbnSearch", "value": "9781599672595", "type": "string" },
+    { "key": "missingIsbnSearch", "value": "9784873115658", "type": "string" },
+    { "key": "stubRateLimitIsbn", "value": "9780000000429", "type": "string" },
+    { "key": "stubServerErrorIsbn", "value": "9780000000500", "type": "string" }
   ],
   "item": [
     {
@@ -255,6 +261,67 @@
             "description": "別ユーザーのTokenで所有者の書籍を削除しようとします。期待HTTPステータス: 403"
           },
           "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('HTTP 403', () => pm.response.to.have.status(403));", "pm.test('日本語の認可エラー', () => pm.expect(pm.response.json()).to.eql({error: 'この操作を行う権限がありません。'}));"] } }]
+        }
+      ]
+    },
+    {
+      "name": "Google Books API（ISBN検索）",
+      "description": "Webセッション認証が必要なGET /books/isbn/{isbn}の確認用です。Bearer Tokenではなく、対象ホストの/loginでログインしてPostmanのCookie JarにセッションCookieを保存してから実行してください。200・400・404は通常環境（isbnSearchBaseUrl）用です。429・500は一時Google APIスタブ環境（isbnStubBaseUrl）専用であり、通常環境では意図的に再現できません。一時スタブと一時Laravelが停止中の場合、429・500リクエストは接続できません。",
+      "item": [
+        {
+          "name": "GET 正常なISBN検索 [200]",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json", "type": "text" }],
+            "url": { "raw": "{{isbnSearchBaseUrl}}/books/isbn/:isbn", "host": ["{{isbnSearchBaseUrl}}"], "path": ["books", "isbn", ":isbn"], "variable": [{ "key": "isbn", "value": "{{validIsbnSearch}}", "description": "実際のGoogle Books APIで取得確認済みのISBN-13" }] },
+            "description": "通常のBookshelf環境で実行します。事前にisbnSearchBaseUrlと同じホストの/loginでWebログインし、セッションCookieを保存してください。期待HTTPステータス: 200。期待レスポンス: title、author、isbn、published_date、description、image_url。外部APIの収録状況により将来結果が変わる可能性があります。"
+          },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('HTTP 200', () => pm.response.to.have.status(200));", "pm.test('書籍自動入力用JSONを返す', () => { const json = pm.response.json(); ['title','author','isbn','published_date','description','image_url'].forEach(key => pm.expect(json).to.have.property(key)); });", "pm.test('検索ISBNを返す', () => pm.expect(pm.response.json().isbn).to.eql(pm.collectionVariables.get('validIsbnSearch')));"] } }]
+        },
+        {
+          "name": "GET ISBN形式不正 [400]",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json", "type": "text" }],
+            "url": { "raw": "{{isbnSearchBaseUrl}}/books/isbn/invalid-isbn", "host": ["{{isbnSearchBaseUrl}}"], "path": ["books", "isbn", "invalid-isbn"] },
+            "description": "13桁数字ではないISBNを送信します。Webセッション認証が必要です。期待HTTPステータス: 400。期待メッセージ: ISBNの入力内容に誤りがあります。"
+          },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('HTTP 400', () => pm.response.to.have.status(400));", "pm.test('ISBNの日本語入力エラー', () => { const json = pm.response.json(); pm.expect(json.message).to.eql('ISBNの入力内容に誤りがあります。'); pm.expect(json.errors).to.have.property('isbn'); });"] } }]
+        },
+        {
+          "name": "GET 書籍情報なし [404]",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json", "type": "text" }],
+            "url": { "raw": "{{isbnSearchBaseUrl}}/books/isbn/:isbn", "host": ["{{isbnSearchBaseUrl}}"], "path": ["books", "isbn", ":isbn"], "variable": [{ "key": "isbn", "value": "{{missingIsbnSearch}}", "description": "Google Books APIで検索結果なしを確認したISBN-13" }] },
+            "description": "通常のBookshelf環境で、Google Books APIから一致書籍を取得できない場合を確認します。Webセッション認証が必要です。期待HTTPステータス: 404。外部APIの収録状況により将来結果が変わる可能性があります。"
+          },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('HTTP 404', () => pm.response.to.have.status(404));", "pm.test('書籍情報なしの日本語エラー', () => pm.expect(pm.response.json()).to.eql({error: '書籍情報が見つかりませんでした。手動で入力してください。'}));"] } }]
+        },
+        {
+          "name": "GET API利用制限 [429]",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json", "type": "text" }],
+            "url": { "raw": "{{isbnStubBaseUrl}}/books/isbn/:isbn", "host": ["{{isbnStubBaseUrl}}"], "path": ["books", "isbn", ":isbn"], "variable": [{ "key": "isbn", "value": "{{stubRateLimitIsbn}}", "description": "一時スタブがGoogle側429を返す検証専用ISBN" }] },
+            "description": "一時SQLite＋一時Google APIスタブ環境専用です。通常環境では実行しないでください。isbnStubBaseUrlと同じ127.0.0.1:8081の/loginでWebログインし、Cookieを保存してから実行します。スタブ用ISBN 9780000000429によりGoogle側429を再現します。期待HTTPステータス: 429。"
+          },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('HTTP 429', () => pm.response.to.have.status(429));", "pm.test('API利用制限の日本語エラー', () => pm.expect(pm.response.json()).to.eql({error: 'Google Books APIの利用上限に達しました。しばらくしてから再度お試しください。'}));"] } }]
+        },
+        {
+          "name": "GET API通信障害 [500]",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json", "type": "text" }],
+            "url": { "raw": "{{isbnStubBaseUrl}}/books/isbn/:isbn", "host": ["{{isbnStubBaseUrl}}"], "path": ["books", "isbn", ":isbn"], "variable": [{ "key": "isbn", "value": "{{stubServerErrorIsbn}}", "description": "一時スタブがGoogle側503を返す検証専用ISBN" }] },
+            "description": "一時SQLite＋一時Google APIスタブ環境専用です。通常環境では実行しないでください。isbnStubBaseUrlと同じ127.0.0.1:8081の/loginでWebログインし、Cookieを保存してから実行します。スタブ用ISBN 9780000000500によりGoogle側503を再現し、Bookshelfが500へ変換することを確認します。期待HTTPステータス: 500。"
+          },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('HTTP 500', () => pm.response.to.have.status(500));", "pm.test('API通信障害の日本語エラー', () => pm.expect(pm.response.json()).to.eql({error: 'Google Books APIから書籍情報を取得できませんでした。手動で入力してください。'}));"] } }]
         }
       ]
     }
