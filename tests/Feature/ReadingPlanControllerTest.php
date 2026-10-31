@@ -5,6 +5,8 @@ namespace Tests\Feature;
 use App\Models\Book;
 use App\Models\ReadingPlan;
 use App\Models\User;
+use App\Notifications\ReadingPlanReminder;
+use App\Services\ReadingPlanReminderNotifier;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
 use Tests\TestCase;
@@ -183,5 +185,91 @@ class ReadingPlanControllerTest extends TestCase
         $this->assertDatabaseMissing('reading_plans', [
             'id' => $readingPlan->id,
         ]);
+    }
+
+    public function test_deleting_plan_removes_its_read_and_unread_notifications_only(): void
+    {
+        $owner = User::factory()->create();
+        $otherUser = User::factory()->create();
+        $readingPlan = ReadingPlan::factory()->for($owner)->create();
+        $otherPlan = ReadingPlan::factory()->for($owner)->create();
+        $notifier = app(ReadingPlanReminderNotifier::class);
+
+        $notifier->send($readingPlan, ReadingPlanReminder::TIMING_THREE_DAYS_BEFORE);
+        $notifier->send($readingPlan, ReadingPlanReminder::TIMING_ON_DUE_DATE);
+        $notifier->send($otherPlan, ReadingPlanReminder::TIMING_ON_DUE_DATE);
+
+        $readNotification = $owner->notifications()
+            ->where('data->reading_plan_id', $readingPlan->id)
+            ->firstOrFail();
+        $readNotification->markAsRead();
+
+        $otherUsersNotification = $otherUser->notifications()->create([
+            'id' => fake()->uuid(),
+            'type' => ReadingPlanReminder::class,
+            'data' => [
+                'reading_plan_id' => $readingPlan->id,
+                'title' => '別ユーザーの通知',
+            ],
+        ]);
+
+        $this->actingAs($owner)
+            ->delete(route('reading-plans.destroy', $readingPlan))
+            ->assertRedirect(route('reading-plans.index'));
+
+        $this->assertDatabaseMissing('reading_plans', ['id' => $readingPlan->id]);
+        $this->assertSame(0, $owner->notifications()
+            ->where('data->reading_plan_id', $readingPlan->id)
+            ->count());
+        $this->assertDatabaseHas('notifications', ['id' => $otherUsersNotification->id]);
+        $this->assertSame(1, $owner->notifications()
+            ->where('data->reading_plan_id', $otherPlan->id)
+            ->count());
+    }
+
+    public function test_failed_non_owner_delete_keeps_plan_notifications(): void
+    {
+        $readingPlan = ReadingPlan::factory()->create();
+        $otherUser = User::factory()->create();
+
+        app(ReadingPlanReminderNotifier::class)->send(
+            $readingPlan,
+            ReadingPlanReminder::TIMING_ON_DUE_DATE
+        );
+
+        $this->actingAs($otherUser)
+            ->delete(route('reading-plans.destroy', $readingPlan))
+            ->assertForbidden();
+
+        $this->assertDatabaseHas('reading_plans', ['id' => $readingPlan->id]);
+        $this->assertSame(1, $readingPlan->user->notifications()
+            ->where('data->reading_plan_id', $readingPlan->id)
+            ->count());
+    }
+
+    public function test_updating_target_date_keeps_existing_notification_history(): void
+    {
+        Carbon::setTestNow('2026-10-20 10:00:00');
+        $owner = User::factory()->create();
+        $readingPlan = ReadingPlan::factory()->for($owner)->create([
+            'target_date' => '2026-11-01',
+        ]);
+
+        app(ReadingPlanReminderNotifier::class)->send(
+            $readingPlan,
+            ReadingPlanReminder::TIMING_THREE_DAYS_BEFORE
+        );
+        $notificationId = $owner->notifications()->firstOrFail()->id;
+
+        $this->actingAs($owner)
+            ->put(route('reading-plans.update', $readingPlan), [
+                'target_date' => '2026-12-01',
+            ])
+            ->assertRedirect(route('reading-plans.index'));
+
+        $this->assertDatabaseHas('notifications', ['id' => $notificationId]);
+        $this->assertSame('2026-11-01', $owner->notifications()
+            ->findOrFail($notificationId)
+            ->data['target_date']);
     }
 }
