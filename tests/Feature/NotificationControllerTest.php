@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Tests\TestCase;
@@ -50,6 +51,37 @@ class NotificationControllerTest extends TestCase
             ->assertSessionHas('success', '通知を既読にしました。');
 
         $this->assertNotNull(DB::table('notifications')->where('id', $id)->value('read_at'));
+    }
+
+    public function test_marking_an_already_read_notification_is_idempotent(): void
+    {
+        Carbon::setTestNow('2026-11-03 10:00:00');
+
+        try {
+            $user = User::factory()->create();
+            $id = $this->createNotification($user, '既読再操作対象', '本文');
+
+            $this->actingAs($user)
+                ->post(route('notifications.read', $id))
+                ->assertRedirect(route('notifications.index'))
+                ->assertSessionHas('success', '通知を既読にしました。');
+
+            $firstReadAt = DB::table('notifications')->where('id', $id)->value('read_at');
+
+            Carbon::setTestNow('2026-11-04 10:00:00');
+
+            $this->post(route('notifications.read', $id))
+                ->assertRedirect(route('notifications.index'))
+                ->assertSessionHas('success', '通知を既読にしました。');
+
+            $this->assertSame(
+                $firstReadAt,
+                DB::table('notifications')->where('id', $id)->value('read_at')
+            );
+            $this->assertDatabaseCount('notifications', 1);
+        } finally {
+            Carbon::setTestNow();
+        }
     }
 
     public function test_authenticated_user_cannot_mark_another_users_notification_as_read(): void
@@ -126,6 +158,20 @@ class NotificationControllerTest extends TestCase
         $this->assertNotNull(
             DB::table('notifications')->where('id', $readNotificationId)->value('read_at')
         );
+    }
+
+    public function test_index_displays_empty_state_without_unread_badge(): void
+    {
+        $user = User::factory()->create();
+
+        $this->actingAs($user)
+            ->get(route('notifications.index'))
+            ->assertOk()
+            ->assertSee('通知はありません。')
+            ->assertDontSee('data-testid="unread-notification-count"', false);
+
+        $this->assertSame(0, $user->unreadNotifications()->count());
+        $this->assertSame(0, $user->notifications()->count());
     }
 
     private function createNotification(

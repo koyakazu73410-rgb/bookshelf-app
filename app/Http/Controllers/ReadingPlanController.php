@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\ReadingPlanStatus;
 use App\Http\Requests\StoreReadingPlanRequest;
 use App\Http\Requests\UpdateReadingPlanRequest;
 use App\Models\Book;
@@ -24,12 +25,10 @@ class ReadingPlanController extends Controller
 
         $currentStatus = $request->string('status')->toString();
 
-        if (in_array($currentStatus, [
-            ReadingPlan::STATUS_IN_PROGRESS,
-            ReadingPlan::STATUS_COMPLETED,
-            ReadingPlan::STATUS_EXPIRED,
-        ], true)) {
-            $query->where('status', $currentStatus);
+        $status = ReadingPlanStatus::tryFrom($currentStatus);
+
+        if ($status !== null) {
+            $query->where('status', $status->value);
         }
 
         $readingPlans = $query->get();
@@ -56,7 +55,7 @@ class ReadingPlanController extends Controller
             ->readingPlans()
             ->make($request->validated());
 
-        $readingPlan->status = ReadingPlan::STATUS_IN_PROGRESS;
+        $readingPlan->status = ReadingPlanStatus::InProgress;
         $readingPlan->completed_at = null;
         $readingPlan->save();
 
@@ -83,8 +82,8 @@ class ReadingPlanController extends Controller
     ): RedirectResponse {
         $reading_plan->target_date = $request->validated('target_date');
 
-        if ($reading_plan->status === ReadingPlan::STATUS_EXPIRED) {
-            $reading_plan->status = ReadingPlan::STATUS_IN_PROGRESS;
+        if ($reading_plan->status === ReadingPlanStatus::Expired) {
+            $reading_plan->status = ReadingPlanStatus::InProgress;
             $reading_plan->completed_at = null;
         }
 
@@ -114,7 +113,7 @@ class ReadingPlanController extends Controller
     {
         $this->authorize('complete', $reading_plan);
 
-        $reading_plan->status = ReadingPlan::STATUS_COMPLETED;
+        $reading_plan->status = ReadingPlanStatus::Completed;
         $reading_plan->completed_at = now();
         $reading_plan->save();
 

@@ -14,6 +14,10 @@ class ReadingPlanReminderNotifier
      * Date and status eligibility are the responsibility of the batch
      * command. The deterministic notification ID makes this operation
      * idempotent for a plan, target date and timing combination.
+     *
+     * @param  ReadingPlan  $readingPlan  The eligible plan being notified.
+     * @param  string  $timing  One of the reminder timing identifiers.
+     * @return bool True when a new notification was created.
      */
     public function send(ReadingPlan $readingPlan, string $timing): bool
     {

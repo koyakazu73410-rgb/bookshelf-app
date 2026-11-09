@@ -48,8 +48,7 @@ class ReportControllerTest extends TestCase
 
         $this->actingAs($user)
             ->get(route('reports.index'))
-            ->assertViewHas('stats', fn (array $stats): bool =>
-                $stats['summary']['total_reviews'] === 1
+            ->assertViewHas('stats', fn (array $stats): bool => $stats['summary']['total_reviews'] === 1
                 && (float) $stats['summary']['average_rating'] === 5.0
                 && $stats['rating_distribution']->all() === [0, 0, 0, 0, 1]
             );
@@ -63,8 +62,7 @@ class ReportControllerTest extends TestCase
 
         $this->actingAs($user)
             ->get(route('reports.index'))
-            ->assertViewHas('stats', fn (array $stats): bool =>
-                $stats['summary']['total_reviews'] === 2
+            ->assertViewHas('stats', fn (array $stats): bool => $stats['summary']['total_reviews'] === 2
                 && (float) $stats['summary']['average_rating'] === 4.0
             )
             ->assertSee('4.0');
@@ -80,8 +78,7 @@ class ReportControllerTest extends TestCase
 
         $this->actingAs($user)
             ->get(route('reports.index'))
-            ->assertViewHas('stats', fn (array $stats): bool =>
-                $stats['summary']['total_reviews'] === 3
+            ->assertViewHas('stats', fn (array $stats): bool => $stats['summary']['total_reviews'] === 3
                 && $stats['summary']['books_read'] === 2
             );
     }
@@ -95,8 +92,7 @@ class ReportControllerTest extends TestCase
 
         $this->actingAs($user)
             ->get(route('reports.index'))
-            ->assertViewHas('stats', fn (array $stats): bool =>
-                $stats['rating_distribution'] instanceof Collection
+            ->assertViewHas('stats', fn (array $stats): bool => $stats['rating_distribution'] instanceof Collection
                 && $stats['rating_distribution']->all() === [2, 0, 1, 0, 1]
             )
             ->assertSee('rating-1', false)
@@ -110,12 +106,11 @@ class ReportControllerTest extends TestCase
         $this->actingAs($user)
             ->get(route('reports.index'))
             ->assertOk()
-            ->assertViewHas('stats', fn (array $stats): bool =>
-                $stats['summary'] === [
-                    'total_reviews' => 0,
-                    'books_read' => 0,
-                    'average_rating' => 0,
-                ]
+            ->assertViewHas('stats', fn (array $stats): bool => $stats['summary'] === [
+                'total_reviews' => 0,
+                'books_read' => 0,
+                'average_rating' => 0,
+            ]
                 && $stats['rating_distribution']->all() === [0, 0, 0, 0, 0]
             )
             ->assertSee('data-testid="average-rating"', false)
@@ -133,11 +128,10 @@ class ReportControllerTest extends TestCase
 
         $this->actingAs($user)
             ->get(route('reports.index'))
-            ->assertViewHas('stats', fn (array $stats): bool =>
-                $stats['top_rated_books']->pluck('id')->all() === [
-                    $highRatedBook->id,
-                    $lowRatedBook->id,
-                ]
+            ->assertViewHas('stats', fn (array $stats): bool => $stats['top_rated_books']->pluck('id')->all() === [
+                $highRatedBook->id,
+                $lowRatedBook->id,
+            ]
             )
             ->assertSee('高評価書籍')
             ->assertSee('低評価書籍');
@@ -153,11 +147,10 @@ class ReportControllerTest extends TestCase
 
         $this->actingAs($user)
             ->get(route('reports.index'))
-            ->assertViewHas('stats', fn (array $stats): bool =>
-                $stats['top_rated_books']->pluck('id')->all() === [
-                    $fiveStarBook->id,
-                    $fourStarBook->id,
-                ]
+            ->assertViewHas('stats', fn (array $stats): bool => $stats['top_rated_books']->pluck('id')->all() === [
+                $fiveStarBook->id,
+                $fourStarBook->id,
+            ]
             );
     }
 
@@ -167,16 +160,14 @@ class ReportControllerTest extends TestCase
         $books = Book::factory()->count(6)->create();
         $ratings = [5, 5, 4, 4, 3, 1];
 
-        $books->each(fn (Book $book, int $index) =>
-            Review::factory()->for($user)->for($book)->create([
-                'rating' => $ratings[$index],
-            ])
+        $books->each(fn (Book $book, int $index) => Review::factory()->for($user)->for($book)->create([
+            'rating' => $ratings[$index],
+        ])
         );
 
         $this->actingAs($user)
             ->get(route('reports.index'))
-            ->assertViewHas('stats', fn (array $stats): bool =>
-                $stats['top_rated_books']->count() === 5
+            ->assertViewHas('stats', fn (array $stats): bool => $stats['top_rated_books']->count() === 5
                 && ! $stats['top_rated_books']->pluck('id')->contains($books->last()->id)
             );
     }
@@ -186,16 +177,14 @@ class ReportControllerTest extends TestCase
         $user = User::factory()->create();
         $books = Book::factory()->count(5)->create();
 
-        $books->each(fn (Book $book, int $index) =>
-            Review::factory()->for($user)->for($book)->create([
-                'rating' => ($index % 5) + 1,
-            ])
+        $books->each(fn (Book $book, int $index) => Review::factory()->for($user)->for($book)->create([
+            'rating' => ($index % 5) + 1,
+        ])
         );
 
         $this->actingAs($user)
             ->get(route('reports.index'))
-            ->assertViewHas('stats', fn (array $stats): bool =>
-                $stats['top_rated_books']->count() === 5
+            ->assertViewHas('stats', fn (array $stats): bool => $stats['top_rated_books']->count() === 5
                 && $stats['top_rated_books']->pluck('id')->unique()->count() === 5
             );
     }
@@ -215,8 +204,7 @@ class ReportControllerTest extends TestCase
 
         $this->actingAs($user)
             ->get(route('reports.index'))
-            ->assertViewHas('stats', fn (array $stats): bool =>
-                $stats['top_rated_books']->count() === 1
+            ->assertViewHas('stats', fn (array $stats): bool => $stats['top_rated_books']->count() === 1
                 && $stats['top_rated_books']->first()['id'] === $book->id
                 && $stats['top_rated_books']->first()['rating'] === 4.5
             );
@@ -237,8 +225,7 @@ class ReportControllerTest extends TestCase
 
         $this->actingAs($user)
             ->get(route('reports.index'))
-            ->assertViewHas('stats', fn (array $stats): bool =>
-                $stats['top_rated_books']->count() === 1
+            ->assertViewHas('stats', fn (array $stats): bool => $stats['top_rated_books']->count() === 1
                 && $stats['top_rated_books']->first()['id'] === $book->id
                 && $stats['top_rated_books']->first()['rating'] === 3.0
             )
@@ -256,8 +243,7 @@ class ReportControllerTest extends TestCase
 
         $this->actingAs($user)
             ->get(route('reports.index'))
-            ->assertViewHas('stats', fn (array $stats): bool =>
-                $stats['top_rated_books']->pluck('id')->all() === [$ownBook->id]
+            ->assertViewHas('stats', fn (array $stats): bool => $stats['top_rated_books']->pluck('id')->all() === [$ownBook->id]
             );
     }
 
@@ -286,12 +272,11 @@ class ReportControllerTest extends TestCase
 
         $this->actingAs($user)
             ->get(route('reports.index'))
-            ->assertViewHas('stats', fn (array $stats): bool =>
-                $stats['top_rated_books']->pluck('id')->all() === [
-                    $lastSameTimeBook->id,
-                    $firstSameTimeBook->id,
-                    $oldBook->id,
-                ]
+            ->assertViewHas('stats', fn (array $stats): bool => $stats['top_rated_books']->pluck('id')->all() === [
+                $lastSameTimeBook->id,
+                $firstSameTimeBook->id,
+                $oldBook->id,
+            ]
             );
     }
 
@@ -327,13 +312,12 @@ class ReportControllerTest extends TestCase
 
         $this->actingAs($user)
             ->get(route('reports.index'))
-            ->assertViewHas('stats', fn (array $stats): bool =>
-                $stats['genre_ratings']->first() === [
-                    'id' => $genre->id,
-                    'name' => $genre->name,
-                    'average_rating' => 4.5,
-                    'count' => 2,
-                ]
+            ->assertViewHas('stats', fn (array $stats): bool => $stats['genre_ratings']->first() === [
+                'id' => $genre->id,
+                'name' => $genre->name,
+                'average_rating' => 4.5,
+                'count' => 2,
+            ]
             );
     }
 
@@ -351,11 +335,10 @@ class ReportControllerTest extends TestCase
 
         $this->actingAs($user)
             ->get(route('reports.index'))
-            ->assertViewHas('stats', fn (array $stats): bool =>
-                $stats['genre_ratings']->pluck('id')->all() === [
-                    $higherGenre->id,
-                    $lowerGenre->id,
-                ]
+            ->assertViewHas('stats', fn (array $stats): bool => $stats['genre_ratings']->pluck('id')->all() === [
+                $higherGenre->id,
+                $lowerGenre->id,
+            ]
             );
     }
 
@@ -371,8 +354,7 @@ class ReportControllerTest extends TestCase
 
         $this->actingAs($user)
             ->get(route('reports.index'))
-            ->assertViewHas('stats', fn (array $stats): bool =>
-                $stats['genre_ratings']->count() === 5
+            ->assertViewHas('stats', fn (array $stats): bool => $stats['genre_ratings']->count() === 5
             );
     }
 
@@ -386,10 +368,8 @@ class ReportControllerTest extends TestCase
 
         $this->actingAs($user)
             ->get(route('reports.index'))
-            ->assertViewHas('stats', fn (array $stats): bool =>
-                $stats['genre_ratings']->pluck('id')->sort()->values()->all() === $genres->pluck('id')->sort()->values()->all()
-                && $stats['genre_ratings']->every(fn (array $genre): bool =>
-                    $genre['average_rating'] === 4.0 && $genre['count'] === 1
+            ->assertViewHas('stats', fn (array $stats): bool => $stats['genre_ratings']->pluck('id')->sort()->values()->all() === $genres->pluck('id')->sort()->values()->all()
+                && $stats['genre_ratings']->every(fn (array $genre): bool => $genre['average_rating'] === 4.0 && $genre['count'] === 1
                 )
             );
     }
@@ -409,8 +389,7 @@ class ReportControllerTest extends TestCase
 
         $this->actingAs($user)
             ->get(route('reports.index'))
-            ->assertViewHas('stats', fn (array $stats): bool =>
-                $stats['genre_ratings']->pluck('id')->all() === [$ownGenre->id]
+            ->assertViewHas('stats', fn (array $stats): bool => $stats['genre_ratings']->pluck('id')->all() === [$ownGenre->id]
             );
     }
 
@@ -435,12 +414,11 @@ class ReportControllerTest extends TestCase
 
         $this->actingAs($user)
             ->get(route('reports.index'))
-            ->assertViewHas('stats', fn (array $stats): bool =>
-                $stats['genre_ratings']->pluck('id')->all() === [
-                    $moreReviewsGenre->id,
-                    $lowerIdGenre->id,
-                    $higherIdGenre->id,
-                ]
+            ->assertViewHas('stats', fn (array $stats): bool => $stats['genre_ratings']->pluck('id')->all() === [
+                $moreReviewsGenre->id,
+                $lowerIdGenre->id,
+                $higherIdGenre->id,
+            ]
             );
     }
 
@@ -478,10 +456,12 @@ class ReportControllerTest extends TestCase
 
         $this->actingAs($user)->get(route('reports.index'))->assertOk();
 
-        $genreQueries = collect(DB::getQueryLog())->filter(fn (array $query): bool =>
-            str_contains($query['query'], '"genres"')
-            && str_contains($query['query'], '"book_genre"')
-        );
+        $genreQueries = collect(DB::getQueryLog())->filter(function (array $query): bool {
+            $sql = str_replace(['"', '`'], '', strtolower($query['query']));
+
+            return str_contains($sql, 'genres')
+                && str_contains($sql, 'book_genre');
+        });
 
         $this->assertCount(1, $genreQueries);
     }

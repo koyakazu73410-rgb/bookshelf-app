@@ -124,7 +124,7 @@ class ValidationMessageResponseTest extends TestCase
     {
         $this->getJson('/api/v1/books?keyword[]=x&genre_id=999999&page=0&per_page=101')
             ->assertUnprocessable()
-            ->assertJsonPath('message', '入力内容に誤りがあります。')
+            ->assertJsonPath('message', 'The given data was invalid.')
             ->assertJsonPath('errors.keyword.0', 'キーワードは文字列で入力してください。')
             ->assertJsonPath('errors.genre_id.0', '指定されたジャンルが存在しません。')
             ->assertJsonPath('errors.page.0', 'ページ番号は1以上で入力してください。')
@@ -137,8 +137,8 @@ class ValidationMessageResponseTest extends TestCase
 
         $this->postJson('/api/v1/books', [])
             ->assertUnprocessable()
-            ->assertJsonPath('message', '入力内容に誤りがあります。')
-            ->assertJsonPath('errors.title.0', 'タイトルを入力してください。')
+            ->assertJsonPath('message', 'The given data was invalid.')
+            ->assertJsonPath('errors.title.0', 'タイトルは必須です。')
             ->assertJsonPath('errors.author.0', '著者名を入力してください。')
             ->assertJsonPath('errors.genres.0', 'ジャンルを1つ以上選択してください。')
             ->assertJsonMissingValidationErrors(['isbn', 'published_date']);

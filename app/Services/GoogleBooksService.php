@@ -11,6 +11,7 @@ class GoogleBooksService
     /**
      * Find the first Google Books volume matching the ISBN.
      *
+     * @param  string  $isbn  The normalized ISBN supplied by the application.
      * @return array<string, mixed>|null
      */
     public function findByIsbn(string $isbn): ?array

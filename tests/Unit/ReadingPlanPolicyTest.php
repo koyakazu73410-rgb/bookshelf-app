@@ -2,6 +2,7 @@
 
 namespace Tests\Unit;
 
+use App\Enums\ReadingPlanStatus;
 use App\Models\ReadingPlan;
 use App\Models\User;
 use App\Policies\ReadingPlanPolicy;
@@ -16,7 +17,7 @@ class ReadingPlanPolicyTest extends TestCase
     {
         $owner = User::factory()->create();
         $readingPlan = ReadingPlan::factory()->for($owner)->create();
-        $policy = new ReadingPlanPolicy();
+        $policy = new ReadingPlanPolicy;
 
         $this->assertTrue($policy->update($owner, $readingPlan));
         $this->assertTrue($policy->delete($owner, $readingPlan));
@@ -30,7 +31,7 @@ class ReadingPlanPolicyTest extends TestCase
     {
         $readingPlan = ReadingPlan::factory()->create();
         $otherUser = User::factory()->create();
-        $policy = new ReadingPlanPolicy();
+        $policy = new ReadingPlanPolicy;
 
         $this->assertFalse($policy->update($otherUser, $readingPlan));
         $this->assertFalse($policy->delete($otherUser, $readingPlan));
@@ -44,9 +45,9 @@ class ReadingPlanPolicyTest extends TestCase
     {
         $owner = User::factory()->create();
         $readingPlan = ReadingPlan::factory()->for($owner)->create([
-            'status' => ReadingPlan::STATUS_COMPLETED,
+            'status' => ReadingPlanStatus::Completed,
         ]);
-        $policy = new ReadingPlanPolicy();
+        $policy = new ReadingPlanPolicy;
 
         $this->assertFalse($policy->update($owner, $readingPlan));
         $this->assertFalse($owner->can('update', $readingPlan));

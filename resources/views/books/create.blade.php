@@ -28,8 +28,8 @@
                             <span id="fetch-btn-label">検索</span>
                         </button>
                     </div>
-                    <p id="fetch-error" class="mt-2 text-sm text-red-600 hidden"></p>
-                    <p id="fetch-success" class="mt-2 text-sm text-green-600 hidden"></p>
+                    <p id="fetch-error" class="mt-2 text-sm text-red-600 hidden" hidden></p>
+                    <p id="fetch-success" class="mt-2 text-sm text-green-600 hidden" hidden></p>
                 </div>
             </div>
 
@@ -56,6 +56,18 @@
         <script>
             const autoFillFieldIds = ['title', 'author', 'isbn', 'published_date', 'description', 'image_url'];
             let lastAutoFilledValues = {};
+
+            function hideSearchMessage(element) {
+                element.textContent = '';
+                element.classList.add('hidden');
+                element.hidden = true;
+            }
+
+            function showSearchMessage(element, message) {
+                element.textContent = message;
+                element.classList.remove('hidden');
+                element.hidden = false;
+            }
 
             function clearPreviousAutoFilledValues() {
                 autoFillFieldIds.forEach(function (fieldId) {
@@ -94,14 +106,13 @@
                 const labelEl = document.getElementById('fetch-btn-label');
                 const submitButton = document.getElementById('book-submit-btn');
 
-                errorEl.classList.add('hidden');
-                successEl.classList.add('hidden');
+                hideSearchMessage(errorEl);
+                hideSearchMessage(successEl);
                 clearPreviousAutoFilledValues();
                 document.getElementById('isbn').value = isbn;
 
                 if (!/^\d{13}$/.test(isbn)) {
-                    errorEl.textContent = 'ISBNは13桁の数字で入力してください。';
-                    errorEl.classList.remove('hidden');
+                    showSearchMessage(errorEl, 'ISBNは13桁の数字で入力してください。');
                     return;
                 }
 
@@ -116,18 +127,14 @@
                     const data = await response.json();
 
                     if (!response.ok || data.error) {
-                        errorEl.textContent = data.error || '書籍情報を取得できませんでした。手動で入力してください。';
-                        errorEl.classList.remove('hidden');
+                        showSearchMessage(errorEl, data.error || '書籍情報を取得できませんでした。手動で入力してください。');
                         return;
                     }
 
                     applyAutoFilledValues(data, isbn);
-
-                    successEl.textContent = '書籍情報を取得しました。';
-                    successEl.classList.remove('hidden');
+                    showSearchMessage(successEl, '書籍情報を取得しました。');
                 } catch (error) {
-                    errorEl.textContent = '通信エラーが発生しました。手動で入力してください。';
-                    errorEl.classList.remove('hidden');
+                    showSearchMessage(errorEl, '通信エラーが発生しました。手動で入力してください。');
                 } finally {
                     this.disabled = false;
                     submitButton.disabled = false;

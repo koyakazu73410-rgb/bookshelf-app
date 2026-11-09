@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Enums\ReadingPlanStatus;
 use App\Models\ReadingPlan;
 use App\Notifications\ReadingPlanReminder;
 use Illuminate\Console\Scheduling\Schedule;
@@ -31,15 +32,15 @@ class SendReadingPlanRemindersCommandTest extends TestCase
     {
         $threeDaysBefore = ReadingPlan::factory()->create([
             'target_date' => '2026-11-13',
-            'status' => ReadingPlan::STATUS_IN_PROGRESS,
+            'status' => ReadingPlanStatus::InProgress,
         ]);
         $onDueDate = ReadingPlan::factory()->create([
             'target_date' => '2026-11-10',
-            'status' => ReadingPlan::STATUS_IN_PROGRESS,
+            'status' => ReadingPlanStatus::InProgress,
         ]);
         $threeDaysAfter = ReadingPlan::factory()->create([
             'target_date' => '2026-11-07',
-            'status' => ReadingPlan::STATUS_EXPIRED,
+            'status' => ReadingPlanStatus::Expired,
         ]);
 
         $this->artisan('reading-plans:remind')
@@ -73,26 +74,26 @@ class SendReadingPlanRemindersCommandTest extends TestCase
         foreach (['2026-11-13', '2026-11-10', '2026-11-07'] as $targetDate) {
             ReadingPlan::factory()->create([
                 'target_date' => $targetDate,
-                'status' => ReadingPlan::STATUS_COMPLETED,
+                'status' => ReadingPlanStatus::Completed,
                 'completed_at' => now(),
             ]);
         }
 
         ReadingPlan::factory()->create([
             'target_date' => '2026-11-13',
-            'status' => ReadingPlan::STATUS_EXPIRED,
+            'status' => ReadingPlanStatus::Expired,
         ]);
         ReadingPlan::factory()->create([
             'target_date' => '2026-11-10',
-            'status' => ReadingPlan::STATUS_EXPIRED,
+            'status' => ReadingPlanStatus::Expired,
         ]);
         ReadingPlan::factory()->create([
             'target_date' => '2026-11-07',
-            'status' => ReadingPlan::STATUS_IN_PROGRESS,
+            'status' => ReadingPlanStatus::InProgress,
         ]);
         ReadingPlan::factory()->create([
             'target_date' => '2026-11-14',
-            'status' => ReadingPlan::STATUS_IN_PROGRESS,
+            'status' => ReadingPlanStatus::InProgress,
         ]);
 
         $this->artisan('reading-plans:remind')
@@ -106,7 +107,7 @@ class SendReadingPlanRemindersCommandTest extends TestCase
     {
         ReadingPlan::factory()->create([
             'target_date' => '2026-11-10',
-            'status' => ReadingPlan::STATUS_IN_PROGRESS,
+            'status' => ReadingPlanStatus::InProgress,
         ]);
 
         $this->artisan('reading-plans:remind')
@@ -123,7 +124,7 @@ class SendReadingPlanRemindersCommandTest extends TestCase
     {
         $readingPlan = ReadingPlan::factory()->create([
             'target_date' => '2026-11-07',
-            'status' => ReadingPlan::STATUS_IN_PROGRESS,
+            'status' => ReadingPlanStatus::InProgress,
         ]);
 
         $this->artisan('reading-plans:expire')->assertSuccessful();
@@ -131,7 +132,7 @@ class SendReadingPlanRemindersCommandTest extends TestCase
             ->expectsOutput('1件のリマインダー通知を生成しました。')
             ->assertSuccessful();
 
-        $this->assertSame(ReadingPlan::STATUS_EXPIRED, $readingPlan->fresh()->status);
+        $this->assertSame(ReadingPlanStatus::Expired, $readingPlan->fresh()->status);
         $this->assertSame(
             ReadingPlanReminder::TIMING_THREE_DAYS_AFTER,
             $readingPlan->user->fresh()->notifications->first()->data['timing']

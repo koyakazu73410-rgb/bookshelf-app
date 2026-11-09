@@ -3,15 +3,14 @@
 namespace Tests\Feature;
 
 use App\Models\Book;
-use App\Models\User;
 use App\Models\Genre;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Foundation\Testing\WithFaker;
 use Tests\TestCase;
 
 class BookStoreTest extends TestCase
 {
-    use \Illuminate\Foundation\Testing\RefreshDatabase;
+    use RefreshDatabase;
 
     public function test_authenticated_user_can_store_book(): void
     {

@@ -2,9 +2,11 @@
 
 namespace App\Models;
 
+use App\Enums\ReadingPlanStatus;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Carbon;
 
 /**
  * A reading plan created by a user for a book.
@@ -12,19 +14,13 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property int $id
  * @property int $user_id
  * @property int $book_id
- * @property \Illuminate\Support\Carbon $target_date
- * @property string $status
- * @property \Illuminate\Support\Carbon|null $completed_at
+ * @property Carbon $target_date
+ * @property ReadingPlanStatus $status
+ * @property Carbon|null $completed_at
  */
 class ReadingPlan extends Model
 {
     use HasFactory;
-
-    public const STATUS_IN_PROGRESS = 'in_progress';
-
-    public const STATUS_COMPLETED = 'completed';
-
-    public const STATUS_EXPIRED = 'expired';
 
     /**
      * The attributes that are mass assignable.
@@ -46,6 +42,7 @@ class ReadingPlan extends Model
     protected $casts = [
         'target_date' => 'date',
         'completed_at' => 'datetime',
+        'status' => ReadingPlanStatus::class,
     ];
 
     /**

@@ -9,6 +9,9 @@ class ReadingPlanNotificationCleaner
 {
     /**
      * Delete reminder notifications owned by the plan's user for this plan.
+     *
+     * @param  ReadingPlan  $readingPlan  The plan whose reminder history is removed.
+     * @return int The number of deleted notification records.
      */
     public function deleteFor(ReadingPlan $readingPlan): int
     {

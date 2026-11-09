@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Enums\ReadingPlanStatus;
 use App\Models\ReadingPlan;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
@@ -46,7 +47,7 @@ class StoreReadingPlanRequest extends FormRequest
             $hasInProgressPlan = ReadingPlan::query()
                 ->where('user_id', $user->id)
                 ->where('book_id', $this->integer('book_id'))
-                ->where('status', ReadingPlan::STATUS_IN_PROGRESS)
+                ->where('status', ReadingPlanStatus::InProgress->value)
                 ->exists();
 
             if ($hasInProgressPlan) {

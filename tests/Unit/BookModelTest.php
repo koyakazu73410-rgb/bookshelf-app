@@ -2,18 +2,19 @@
 
 namespace Tests\Unit;
 
-use Tests\TestCase;
 use App\Models\Book;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\TestCase;
 
 class BookModelTest extends TestCase
 {
     use RefreshDatabase;
+
     public function test_book_has_genres_relationship(): void
     {
-        $book = new Book();
+        $book = new Book;
 
         $this->assertInstanceOf(
             BelongsToMany::class,
@@ -23,7 +24,7 @@ class BookModelTest extends TestCase
 
     public function test_book_has_reviews_relationship(): void
     {
-        $book = new Book();
+        $book = new Book;
 
         $this->assertInstanceOf(
             HasMany::class,

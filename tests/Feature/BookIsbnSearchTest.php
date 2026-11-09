@@ -51,6 +51,10 @@ class BookIsbnSearchTest extends TestCase
             ->assertSee('let lastAutoFilledValues = {}', false)
             ->assertSee('field.value === lastAutoFilledValues[fieldId]', false)
             ->assertSee("document.getElementById('isbn').value = isbn", false)
+            ->assertSee('hideSearchMessage(errorEl)', false)
+            ->assertSee('hideSearchMessage(successEl)', false)
+            ->assertSee('element.hidden = true', false)
+            ->assertSee('element.hidden = false', false)
             ->assertSee('submitButton.disabled = true', false)
             ->assertSee('submitButton.disabled = false', false);
     }

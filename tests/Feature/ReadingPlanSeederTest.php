@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Enums\ReadingPlanStatus;
 use App\Models\Book;
 use App\Models\ReadingPlan;
 use App\Models\User;
@@ -45,7 +46,7 @@ class ReadingPlanSeederTest extends TestCase
             $this->assertTrue(
                 ReadingPlan::query()
                     ->whereDate('target_date', $date)
-                    ->where('status', ReadingPlan::STATUS_IN_PROGRESS)
+                    ->where('status', ReadingPlanStatus::InProgress->value)
                     ->exists()
             );
         }
@@ -70,13 +71,13 @@ class ReadingPlanSeederTest extends TestCase
         $this->seed(ReadingPlanSeeder::class);
 
         $completedPlan = ReadingPlan::query()
-            ->where('status', ReadingPlan::STATUS_COMPLETED)
+            ->where('status', ReadingPlanStatus::Completed->value)
             ->firstOrFail();
 
         $this->assertSame('2026-10-22', $completedPlan->target_date->toDateString());
         $this->assertSame('2026-10-27', $completedPlan->completed_at->toDateString());
-        $this->assertSame(5, ReadingPlan::where('status', ReadingPlan::STATUS_IN_PROGRESS)->count());
-        $this->assertSame(0, ReadingPlan::where('status', ReadingPlan::STATUS_EXPIRED)->count());
+        $this->assertSame(5, ReadingPlan::where('status', ReadingPlanStatus::InProgress->value)->count());
+        $this->assertSame(0, ReadingPlan::where('status', ReadingPlanStatus::Expired->value)->count());
     }
 
     public function test_rerunning_seeder_does_not_create_duplicates(): void
@@ -116,7 +117,7 @@ class ReadingPlanSeederTest extends TestCase
         $manualPlan->user()->associate($user);
         $manualPlan->book()->associate($book);
         $manualPlan->target_date = Carbon::today('Asia/Tokyo')->addMonth();
-        $manualPlan->status = ReadingPlan::STATUS_IN_PROGRESS;
+        $manualPlan->status = ReadingPlanStatus::InProgress;
         $manualPlan->save();
 
         try {
@@ -129,7 +130,7 @@ class ReadingPlanSeederTest extends TestCase
         $this->assertDatabaseCount('reading_plans', 1);
         $manualPlan->refresh();
         $this->assertSame('2026-12-01', $manualPlan->target_date->toDateString());
-        $this->assertSame(ReadingPlan::STATUS_IN_PROGRESS, $manualPlan->status);
+        $this->assertSame(ReadingPlanStatus::InProgress, $manualPlan->status);
     }
 
     public function test_seeded_scenarios_drive_expiration_and_three_reminder_targets(): void
@@ -143,7 +144,7 @@ class ReadingPlanSeederTest extends TestCase
         $this->assertTrue(
             ReadingPlan::query()
                 ->whereDate('target_date', '2026-10-29')
-                ->where('status', ReadingPlan::STATUS_EXPIRED)
+                ->where('status', ReadingPlanStatus::Expired->value)
                 ->exists()
         );
         $this->assertDatabaseCount('notifications', 3);

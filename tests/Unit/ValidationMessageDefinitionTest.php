@@ -88,7 +88,7 @@ class ValidationMessageDefinitionTest extends TestCase
         $messages = (new ApiStoreBookRequest)->messages();
 
         $this->assertArrayNotHasKey('user_id.required', $messages);
-        $this->assertSame('タイトルを入力してください。', $messages['title.required']);
+        $this->assertSame('タイトルは必須です。', $messages['title.required']);
         $this->assertSame('同じジャンルを重複して選択することはできません。', $messages['genres.*.distinct']);
     }
 }

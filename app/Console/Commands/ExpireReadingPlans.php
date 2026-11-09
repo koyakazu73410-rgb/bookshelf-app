@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands;
 
+use App\Enums\ReadingPlanStatus;
 use App\Models\ReadingPlan;
 use Illuminate\Console\Command;
 
@@ -29,10 +30,10 @@ class ExpireReadingPlans extends Command
         $today = now('Asia/Tokyo')->startOfDay();
 
         $updatedCount = ReadingPlan::query()
-            ->where('status', ReadingPlan::STATUS_IN_PROGRESS)
+            ->where('status', ReadingPlanStatus::InProgress->value)
             ->whereDate('target_date', '<', $today->toDateString())
             ->update([
-                'status' => ReadingPlan::STATUS_EXPIRED,
+                'status' => ReadingPlanStatus::Expired->value,
             ]);
 
         $this->info("{$updatedCount}件の読書計画を期限切れに更新しました。");

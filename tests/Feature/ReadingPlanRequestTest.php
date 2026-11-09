@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Enums\ReadingPlanStatus;
 use App\Http\Requests\StoreReadingPlanRequest;
 use App\Http\Requests\UpdateReadingPlanRequest;
 use App\Models\Book;
@@ -79,7 +80,7 @@ class ReadingPlanRequestTest extends TestCase
         $user = User::factory()->create();
         $book = Book::factory()->create();
         ReadingPlan::factory()->for($user)->for($book)->create([
-            'status' => ReadingPlan::STATUS_IN_PROGRESS,
+            'status' => ReadingPlanStatus::InProgress,
         ]);
 
         $this->actingAs($user)
@@ -95,7 +96,7 @@ class ReadingPlanRequestTest extends TestCase
     {
         $book = Book::factory()->create();
         ReadingPlan::factory()->for(User::factory()->create())->for($book)->create([
-            'status' => ReadingPlan::STATUS_IN_PROGRESS,
+            'status' => ReadingPlanStatus::InProgress,
         ]);
 
         $this->actingAs(User::factory()->create())
@@ -108,7 +109,7 @@ class ReadingPlanRequestTest extends TestCase
 
     public function test_store_allows_registration_after_a_completed_or_expired_plan(): void
     {
-        foreach ([ReadingPlan::STATUS_COMPLETED, ReadingPlan::STATUS_EXPIRED] as $status) {
+        foreach ([ReadingPlanStatus::Completed, ReadingPlanStatus::Expired] as $status) {
             $user = User::factory()->create();
             $book = Book::factory()->create();
             ReadingPlan::factory()->for($user)->for($book)->create(['status' => $status]);
@@ -128,7 +129,7 @@ class ReadingPlanRequestTest extends TestCase
             ->postJson('/_testing/reading-plans', [
                 'book_id' => Book::factory()->create()->id,
                 'target_date' => now()->addDay()->toDateString(),
-                'status' => ReadingPlan::STATUS_COMPLETED,
+                'status' => ReadingPlanStatus::Completed->value,
             ])
             ->assertUnprocessable()
             ->assertJsonValidationErrors('status');
@@ -149,7 +150,7 @@ class ReadingPlanRequestTest extends TestCase
             ->putJson("/_testing/reading-plans/{$readingPlan->id}", [
                 'target_date' => now()->addWeek()->toDateString(),
                 'book_id' => Book::factory()->create()->id,
-                'status' => ReadingPlan::STATUS_COMPLETED,
+                'status' => ReadingPlanStatus::Completed->value,
             ])
             ->assertUnprocessable()
             ->assertJsonValidationErrors(['book_id', 'status']);

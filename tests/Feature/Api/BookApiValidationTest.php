@@ -18,7 +18,7 @@ class BookApiValidationTest extends TestCase
         $response = $this->getJson('/api/v1/books?keyword[]=x&genre_id=999&page=0&per_page=101');
 
         $response->assertUnprocessable()
-            ->assertJsonPath('message', '入力内容に誤りがあります。')
+            ->assertJsonPath('message', 'The given data was invalid.')
             ->assertJsonValidationErrors(['keyword', 'genre_id', 'page', 'per_page']);
     }
 
@@ -29,12 +29,56 @@ class BookApiValidationTest extends TestCase
         $response = $this->postJson('/api/v1/books', []);
 
         $response->assertUnprocessable()
-            ->assertJsonPath('message', '入力内容に誤りがあります。')
+            ->assertJsonPath('message', 'The given data was invalid.')
             ->assertJsonValidationErrors([
                 'title', 'author', 'genres',
             ])
             ->assertJsonMissingValidationErrors(['isbn', 'published_date']);
         $this->assertDatabaseCount('books', 0);
+    }
+
+    public function test_store_returns_exact_json_when_only_title_is_missing(): void
+    {
+        $genre = Genre::factory()->create();
+        Sanctum::actingAs(User::factory()->create());
+
+        $this->postJson('/api/v1/books', [
+            'author' => 'API著者',
+            'genres' => [$genre->id],
+        ])->assertUnprocessable()
+            ->assertExactJson([
+                'message' => 'The given data was invalid.',
+                'errors' => [
+                    'title' => ['タイトルは必須です。'],
+                ],
+            ]);
+
+        $this->assertDatabaseCount('books', 0);
+    }
+
+    public function test_update_uses_the_confirmed_validation_response(): void
+    {
+        $user = User::factory()->create();
+        $book = Book::factory()->for($user)->create();
+        $genre = Genre::factory()->create();
+        Sanctum::actingAs($user);
+
+        $this->putJson("/api/v1/books/{$book->id}", [
+            'author' => '更新著者',
+            'genres' => [$genre->id],
+        ])->assertUnprocessable()
+            ->assertExactJson([
+                'message' => 'The given data was invalid.',
+                'errors' => [
+                    'title' => ['タイトルは必須です。'],
+                ],
+            ]);
+
+        $this->assertDatabaseHas('books', [
+            'id' => $book->id,
+            'title' => $book->title,
+            'user_id' => $user->id,
+        ]);
     }
 
     public function test_store_rejects_invalid_values_and_duplicate_genres(): void

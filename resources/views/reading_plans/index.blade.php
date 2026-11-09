@@ -12,9 +12,9 @@
                     <label for="status" class="text-sm text-gray-700">状態:</label>
                     <select name="status" id="status" onchange="this.form.submit()" class="w-full sm:w-auto rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm">
                         <option value="">すべて</option>
-                        <option value="in_progress" @selected($currentStatus === 'in_progress')>進行中</option>
-                        <option value="completed" @selected($currentStatus === 'completed')>完了</option>
-                        <option value="expired" @selected($currentStatus === 'expired')>期限切れ</option>
+                        <option value="{{ \App\Enums\ReadingPlanStatus::InProgress->value }}" @selected($currentStatus === \App\Enums\ReadingPlanStatus::InProgress->value)>進行中</option>
+                        <option value="{{ \App\Enums\ReadingPlanStatus::Completed->value }}" @selected($currentStatus === \App\Enums\ReadingPlanStatus::Completed->value)>完了</option>
+                        <option value="{{ \App\Enums\ReadingPlanStatus::Expired->value }}" @selected($currentStatus === \App\Enums\ReadingPlanStatus::Expired->value)>期限切れ</option>
                     </select>
                 </form>
 
@@ -59,19 +59,19 @@
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap text-sm">
                                             @switch($plan->status)
-                                                @case('in_progress')
+                                                @case(\App\Enums\ReadingPlanStatus::InProgress)
                                                     <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">進行中</span>
                                                     @break
-                                                @case('completed')
+                                                @case(\App\Enums\ReadingPlanStatus::Completed)
                                                     <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">完了</span>
                                                     @break
-                                                @case('expired')
+                                                @case(\App\Enums\ReadingPlanStatus::Expired)
                                                     <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">期限切れ</span>
                                                     @break
                                             @endswitch
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap text-sm space-x-2">
-                                            @if($plan->status !== 'completed')
+                                            @if($plan->status !== \App\Enums\ReadingPlanStatus::Completed)
                                                 <form action="{{ route('reading-plans.complete', $plan) }}" method="POST" class="inline" novalidate>
                                                     @csrf
                                                     <button type="submit" class="text-green-600 hover:text-green-900">読了する</button>

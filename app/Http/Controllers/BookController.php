@@ -13,6 +13,7 @@ use Illuminate\Http\Client\RequestException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 use LogicException;
 
@@ -154,9 +155,12 @@ class BookController extends Controller
 
         $validated['user_id'] = auth()->id();
 
-        $book = Book::create($validated);
+        $book = DB::transaction(function () use ($validated, $genres): Book {
+            $book = Book::create($validated);
+            $book->genres()->attach($genres);
 
-        $book->genres()->attach($genres);
+            return $book;
+        });
 
         return redirect()->route('books.show', $book)
             ->with('success', '書籍を登録しました。');
@@ -217,9 +221,10 @@ class BookController extends Controller
 
         unset($validated['genres']);
 
-        $book->update($validated);
-
-        $book->genres()->sync($genres);
+        DB::transaction(function () use ($book, $validated, $genres): void {
+            $book->update($validated);
+            $book->genres()->sync($genres);
+        });
 
         return redirect()
             ->route('books.show', $book)

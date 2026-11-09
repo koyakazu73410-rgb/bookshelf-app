@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Enums\ReadingPlanStatus;
 use App\Models\Book;
 use App\Models\ReadingPlan;
 use App\Models\User;
@@ -31,7 +32,7 @@ class ReadingPlanControllerTest extends TestCase
         $this->assertDatabaseHas('reading_plans', [
             'user_id' => $user->id,
             'book_id' => $book->id,
-            'status' => ReadingPlan::STATUS_IN_PROGRESS,
+            'status' => ReadingPlanStatus::InProgress->value,
             'completed_at' => null,
         ]);
         $this->assertDatabaseCount('reading_plans', 1);
@@ -61,7 +62,7 @@ class ReadingPlanControllerTest extends TestCase
         Carbon::setTestNow('2026-10-20 10:00:00');
         $readingPlan = ReadingPlan::factory()->create([
             'target_date' => '2026-11-01',
-            'status' => ReadingPlan::STATUS_IN_PROGRESS,
+            'status' => ReadingPlanStatus::InProgress,
             'completed_at' => null,
         ]);
         $otherUser = User::factory()->create();
@@ -80,7 +81,7 @@ class ReadingPlanControllerTest extends TestCase
 
         $this->assertDatabaseHas('reading_plans', [
             'id' => $readingPlan->id,
-            'status' => ReadingPlan::STATUS_IN_PROGRESS,
+            'status' => ReadingPlanStatus::InProgress,
             'completed_at' => null,
         ]);
         $this->assertSame('2026-11-01', $readingPlan->fresh()->target_date->toDateString());
@@ -103,7 +104,7 @@ class ReadingPlanControllerTest extends TestCase
 
         $this->assertDatabaseHas('reading_plans', [
             'id' => $readingPlan->id,
-            'status' => ReadingPlan::STATUS_IN_PROGRESS,
+            'status' => ReadingPlanStatus::InProgress,
         ]);
         $this->assertSame('2026-12-01', $readingPlan->fresh()->target_date->toDateString());
     }
@@ -114,7 +115,7 @@ class ReadingPlanControllerTest extends TestCase
         $owner = User::factory()->create();
         $readingPlan = ReadingPlan::factory()->for($owner)->create([
             'target_date' => '2026-11-01',
-            'status' => ReadingPlan::STATUS_COMPLETED,
+            'status' => ReadingPlanStatus::Completed,
             'completed_at' => '2026-10-19 12:00:00',
         ]);
 
@@ -126,7 +127,7 @@ class ReadingPlanControllerTest extends TestCase
 
         $readingPlan->refresh();
         $this->assertSame('2026-11-01', $readingPlan->target_date->toDateString());
-        $this->assertSame(ReadingPlan::STATUS_COMPLETED, $readingPlan->status);
+        $this->assertSame(ReadingPlanStatus::Completed, $readingPlan->status);
         $this->assertSame('2026-10-19 12:00:00', $readingPlan->completed_at->format('Y-m-d H:i:s'));
     }
 
@@ -136,7 +137,7 @@ class ReadingPlanControllerTest extends TestCase
         $owner = User::factory()->create();
         $readingPlan = ReadingPlan::factory()->for($owner)->create([
             'target_date' => '2026-10-19',
-            'status' => ReadingPlan::STATUS_EXPIRED,
+            'status' => ReadingPlanStatus::Expired,
             'completed_at' => '2026-10-19 20:00:00',
         ]);
 
@@ -148,7 +149,7 @@ class ReadingPlanControllerTest extends TestCase
 
         $this->assertDatabaseHas('reading_plans', [
             'id' => $readingPlan->id,
-            'status' => ReadingPlan::STATUS_IN_PROGRESS,
+            'status' => ReadingPlanStatus::InProgress,
             'completed_at' => null,
         ]);
         $this->assertSame('2026-10-21', $readingPlan->fresh()->target_date->toDateString());
@@ -167,7 +168,7 @@ class ReadingPlanControllerTest extends TestCase
 
         $this->assertDatabaseHas('reading_plans', [
             'id' => $readingPlan->id,
-            'status' => ReadingPlan::STATUS_COMPLETED,
+            'status' => ReadingPlanStatus::Completed,
             'completed_at' => '2026-10-20 15:30:45',
         ]);
     }

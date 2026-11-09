@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Enums\ReadingPlanStatus;
 use App\Models\Book;
 use App\Models\ReadingPlan;
 use App\Models\User;
@@ -18,49 +19,49 @@ class ReadingPlanSeeder extends Seeder
      * Users and books are resolved by stable business keys rather than IDs.
      * Each user/book pair is reserved for one seed scenario.
      *
-     * @var list<array{email: string, isbn: string, target_offset: int, status: string, completed_offset: int|null}>
+     * @var list<array{email: string, isbn: string, target_offset: int, status: ReadingPlanStatus, completed_offset: int|null}>
      */
     private const SCENARIOS = [
         [
             'email' => 'yamada@example.com',
             'isbn' => '9784101010014',
             'target_offset' => 3,
-            'status' => ReadingPlan::STATUS_IN_PROGRESS,
+            'status' => ReadingPlanStatus::InProgress,
             'completed_offset' => null,
         ],
         [
             'email' => 'yamada@example.com',
             'isbn' => '9784422100524',
             'target_offset' => 0,
-            'status' => ReadingPlan::STATUS_IN_PROGRESS,
+            'status' => ReadingPlanStatus::InProgress,
             'completed_offset' => null,
         ],
         [
             'email' => 'yamada@example.com',
             'isbn' => '9784873115658',
             'target_offset' => -3,
-            'status' => ReadingPlan::STATUS_IN_PROGRESS,
+            'status' => ReadingPlanStatus::InProgress,
             'completed_offset' => null,
         ],
         [
             'email' => 'yamada@example.com',
             'isbn' => '9784101010021',
             'target_offset' => 7,
-            'status' => ReadingPlan::STATUS_IN_PROGRESS,
+            'status' => ReadingPlanStatus::InProgress,
             'completed_offset' => null,
         ],
         [
             'email' => 'yamada@example.com',
             'isbn' => '9784048930598',
             'target_offset' => -10,
-            'status' => ReadingPlan::STATUS_COMPLETED,
+            'status' => ReadingPlanStatus::Completed,
             'completed_offset' => -5,
         ],
         [
             'email' => 'suzuki@example.com',
             'isbn' => '9784478025819',
             'target_offset' => 5,
-            'status' => ReadingPlan::STATUS_IN_PROGRESS,
+            'status' => ReadingPlanStatus::InProgress,
             'completed_offset' => null,
         ],
     ];
@@ -149,7 +150,7 @@ class ReadingPlanSeeder extends Seeder
     private function matchesScenario(
         ReadingPlan $readingPlan,
         Carbon $targetDate,
-        string $status,
+        ReadingPlanStatus $status,
         ?Carbon $completedAt
     ): bool {
         $completedAtMatches = $completedAt === null

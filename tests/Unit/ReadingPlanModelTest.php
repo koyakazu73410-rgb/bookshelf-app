@@ -2,6 +2,7 @@
 
 namespace Tests\Unit;
 
+use App\Enums\ReadingPlanStatus;
 use App\Models\Book;
 use App\Models\ReadingPlan;
 use App\Models\User;
@@ -56,16 +57,21 @@ class ReadingPlanModelTest extends TestCase
     {
         $readingPlan = ReadingPlan::factory()->create();
 
-        $this->assertSame('in_progress', ReadingPlan::STATUS_IN_PROGRESS);
-        $this->assertSame('completed', ReadingPlan::STATUS_COMPLETED);
-        $this->assertSame('expired', ReadingPlan::STATUS_EXPIRED);
-        $this->assertSame(ReadingPlan::STATUS_IN_PROGRESS, $readingPlan->status);
+        $this->assertSame(ReadingPlanStatus::InProgress, $readingPlan->status);
+        $this->assertSame('in_progress', $readingPlan->getRawOriginal('status'));
         $this->assertNull($readingPlan->completed_at);
+    }
+
+    public function test_status_enum_defines_the_existing_database_values(): void
+    {
+        $this->assertSame('in_progress', ReadingPlanStatus::InProgress->value);
+        $this->assertSame('completed', ReadingPlanStatus::Completed->value);
+        $this->assertSame('expired', ReadingPlanStatus::Expired->value);
     }
 
     public function test_user_id_status_and_completed_at_are_not_mass_assignable(): void
     {
-        $readingPlan = new ReadingPlan();
+        $readingPlan = new ReadingPlan;
 
         $this->assertTrue($readingPlan->isFillable('book_id'));
         $this->assertTrue($readingPlan->isFillable('target_date'));

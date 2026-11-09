@@ -25,8 +25,43 @@ class BookApiAuthenticationTest extends TestCase
         foreach ($responses as $response) {
             $response->assertUnauthorized()
                 ->assertHeader('content-type', 'application/json')
-                ->assertJsonStructure(['message']);
+                ->assertExactJson(['message' => 'Unauthenticated.']);
         }
+    }
+
+    public function test_invalid_bearer_token_cannot_access_book_write_endpoints(): void
+    {
+        $owner = User::factory()->create();
+        $existingBook = Book::factory()->for($owner)->create([
+            'title' => '変更前の書籍',
+        ]);
+        $genre = Genre::factory()->create();
+        $newBook = Book::factory()->make();
+        $invalidToken = 'invalid-bearer-token';
+
+        $createPayload = $this->payload($newBook, $genre);
+        $updatePayload = $this->payload($existingBook, $genre);
+        $updatePayload['title'] = '不正な更新';
+
+        $responses = [
+            $this->withToken($invalidToken)->postJson('/api/v1/books', $createPayload),
+            $this->withToken($invalidToken)->putJson("/api/v1/books/{$existingBook->id}", $updatePayload),
+            $this->withToken($invalidToken)->deleteJson("/api/v1/books/{$existingBook->id}"),
+        ];
+
+        foreach ($responses as $response) {
+            $response->assertUnauthorized()
+                ->assertHeader('content-type', 'application/json')
+                ->assertExactJson(['message' => 'Unauthenticated.']);
+        }
+
+        $this->assertDatabaseMissing('books', [
+            'isbn' => $newBook->isbn,
+        ]);
+        $this->assertDatabaseHas('books', [
+            'id' => $existingBook->id,
+            'title' => '変更前の書籍',
+        ]);
     }
 
     public function test_authenticated_user_can_create_book_owned_by_themselves(): void
@@ -74,6 +109,32 @@ class BookApiAuthenticationTest extends TestCase
         $this->assertDatabaseMissing('books', ['id' => $book->id]);
     }
 
+    public function test_user_id_in_update_request_does_not_change_book_owner(): void
+    {
+        $owner = User::factory()->create();
+        $otherUser = User::factory()->create();
+        $book = Book::factory()->for($owner)->create();
+        $genre = Genre::factory()->create();
+        $token = $owner->createToken('book-api')->plainTextToken;
+        $payload = $this->payload($book, $genre);
+        $payload['title'] = '所有者を維持する更新';
+        $payload['user_id'] = $otherUser->id;
+
+        $this->withToken($token)
+            ->putJson("/api/v1/books/{$book->id}", $payload)
+            ->assertOk();
+
+        $this->assertDatabaseHas('books', [
+            'id' => $book->id,
+            'title' => '所有者を維持する更新',
+            'user_id' => $owner->id,
+        ]);
+        $this->assertDatabaseMissing('books', [
+            'id' => $book->id,
+            'user_id' => $otherUser->id,
+        ]);
+    }
+
     public function test_non_owner_cannot_update_or_delete_book(): void
     {
         $owner = User::factory()->create();
@@ -92,7 +153,7 @@ class BookApiAuthenticationTest extends TestCase
         foreach ($responses as $response) {
             $response->assertForbidden()
                 ->assertHeader('content-type', 'application/json')
-                ->assertExactJson(['error' => 'この操作を行う権限がありません。']);
+                ->assertExactJson(['error' => 'この操作を実行する権限がありません。']);
         }
 
         $this->assertDatabaseHas('books', [

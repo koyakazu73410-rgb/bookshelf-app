@@ -13,13 +13,13 @@
                         <p>対象書籍: <strong>{{ $readingPlan->book->title }}</strong></p>
                         <p>現在の状態:
                             @switch($readingPlan->status)
-                                @case('in_progress')
+                                @case(\App\Enums\ReadingPlanStatus::InProgress)
                                     <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">進行中</span>
                                     @break
-                                @case('completed')
+                                @case(\App\Enums\ReadingPlanStatus::Completed)
                                     <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">完了</span>
                                     @break
-                                @case('expired')
+                                @case(\App\Enums\ReadingPlanStatus::Expired)
                                     <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">期限切れ</span>
                                     @break
                             @endswitch

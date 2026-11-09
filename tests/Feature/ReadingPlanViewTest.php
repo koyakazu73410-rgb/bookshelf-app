@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Enums\ReadingPlanStatus;
 use App\Models\Book;
 use App\Models\ReadingPlan;
 use App\Models\User;
@@ -76,17 +77,17 @@ class ReadingPlanViewTest extends TestCase
         $completedBook = Book::factory()->create(['title' => '完了フィルター対象']);
         $expiredBook = Book::factory()->create(['title' => '期限切れフィルター対象']);
         ReadingPlan::factory()->for($user)->for($inProgressBook)->create([
-            'status' => ReadingPlan::STATUS_IN_PROGRESS,
+            'status' => ReadingPlanStatus::InProgress,
         ]);
         ReadingPlan::factory()->for($user)->for($completedBook)->create([
-            'status' => ReadingPlan::STATUS_COMPLETED,
+            'status' => ReadingPlanStatus::Completed,
         ]);
         ReadingPlan::factory()->for($user)->for($expiredBook)->create([
-            'status' => ReadingPlan::STATUS_EXPIRED,
+            'status' => ReadingPlanStatus::Expired,
         ]);
 
         $this->actingAs($user)
-            ->get(route('reading-plans.index', ['status' => ReadingPlan::STATUS_COMPLETED]))
+            ->get(route('reading-plans.index', ['status' => ReadingPlanStatus::Completed->value]))
             ->assertOk()
             ->assertSee('完了フィルター対象')
             ->assertDontSee('進行中フィルター対象')

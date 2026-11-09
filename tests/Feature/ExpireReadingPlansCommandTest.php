@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Enums\ReadingPlanStatus;
 use App\Models\ReadingPlan;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -30,33 +31,33 @@ class ExpireReadingPlansCommandTest extends TestCase
     {
         $readingPlan = ReadingPlan::factory()->create([
             'target_date' => '2026-10-20',
-            'status' => ReadingPlan::STATUS_IN_PROGRESS,
+            'status' => ReadingPlanStatus::InProgress,
         ]);
 
         $this->artisan('reading-plans:expire')
             ->expectsOutput('1件の読書計画を期限切れに更新しました。')
             ->assertSuccessful();
 
-        $this->assertSame(ReadingPlan::STATUS_EXPIRED, $readingPlan->fresh()->status);
+        $this->assertSame(ReadingPlanStatus::Expired, $readingPlan->fresh()->status);
     }
 
     public function test_today_and_future_in_progress_plans_are_not_changed(): void
     {
         $todayPlan = ReadingPlan::factory()->create([
             'target_date' => '2026-10-21',
-            'status' => ReadingPlan::STATUS_IN_PROGRESS,
+            'status' => ReadingPlanStatus::InProgress,
         ]);
         $futurePlan = ReadingPlan::factory()->create([
             'target_date' => '2026-10-22',
-            'status' => ReadingPlan::STATUS_IN_PROGRESS,
+            'status' => ReadingPlanStatus::InProgress,
         ]);
 
         $this->artisan('reading-plans:expire')
             ->expectsOutput('0件の読書計画を期限切れに更新しました。')
             ->assertSuccessful();
 
-        $this->assertSame(ReadingPlan::STATUS_IN_PROGRESS, $todayPlan->fresh()->status);
-        $this->assertSame(ReadingPlan::STATUS_IN_PROGRESS, $futurePlan->fresh()->status);
+        $this->assertSame(ReadingPlanStatus::InProgress, $todayPlan->fresh()->status);
+        $this->assertSame(ReadingPlanStatus::InProgress, $futurePlan->fresh()->status);
     }
 
     public function test_completed_and_already_expired_plans_are_not_changed(): void
@@ -64,28 +65,28 @@ class ExpireReadingPlansCommandTest extends TestCase
         $completedAt = '2026-10-19 12:00:00';
         $completedPlan = ReadingPlan::factory()->create([
             'target_date' => '2026-10-20',
-            'status' => ReadingPlan::STATUS_COMPLETED,
+            'status' => ReadingPlanStatus::Completed,
             'completed_at' => $completedAt,
         ]);
         $expiredPlan = ReadingPlan::factory()->create([
             'target_date' => '2026-10-20',
-            'status' => ReadingPlan::STATUS_EXPIRED,
+            'status' => ReadingPlanStatus::Expired,
         ]);
 
         $this->artisan('reading-plans:expire')
             ->expectsOutput('0件の読書計画を期限切れに更新しました。')
             ->assertSuccessful();
 
-        $this->assertSame(ReadingPlan::STATUS_COMPLETED, $completedPlan->fresh()->status);
+        $this->assertSame(ReadingPlanStatus::Completed, $completedPlan->fresh()->status);
         $this->assertSame($completedAt, $completedPlan->fresh()->completed_at->format('Y-m-d H:i:s'));
-        $this->assertSame(ReadingPlan::STATUS_EXPIRED, $expiredPlan->fresh()->status);
+        $this->assertSame(ReadingPlanStatus::Expired, $expiredPlan->fresh()->status);
     }
 
     public function test_multiple_overdue_plans_are_updated_in_one_run(): void
     {
         $plans = ReadingPlan::factory()->count(3)->create([
             'target_date' => '2026-10-20',
-            'status' => ReadingPlan::STATUS_IN_PROGRESS,
+            'status' => ReadingPlanStatus::InProgress,
         ]);
 
         $this->artisan('reading-plans:expire')
@@ -93,7 +94,7 @@ class ExpireReadingPlansCommandTest extends TestCase
             ->assertSuccessful();
 
         foreach ($plans as $readingPlan) {
-            $this->assertSame(ReadingPlan::STATUS_EXPIRED, $readingPlan->fresh()->status);
+            $this->assertSame(ReadingPlanStatus::Expired, $readingPlan->fresh()->status);
         }
     }
 
@@ -101,7 +102,7 @@ class ExpireReadingPlansCommandTest extends TestCase
     {
         $readingPlan = ReadingPlan::factory()->create([
             'target_date' => '2026-10-20',
-            'status' => ReadingPlan::STATUS_IN_PROGRESS,
+            'status' => ReadingPlanStatus::InProgress,
         ]);
 
         $this->artisan('reading-plans:expire')
@@ -116,7 +117,7 @@ class ExpireReadingPlansCommandTest extends TestCase
             ->assertSuccessful();
 
         $readingPlan->refresh();
-        $this->assertSame(ReadingPlan::STATUS_EXPIRED, $readingPlan->status);
+        $this->assertSame(ReadingPlanStatus::Expired, $readingPlan->status);
         $this->assertTrue($readingPlan->updated_at->equalTo($firstUpdatedAt));
     }
 

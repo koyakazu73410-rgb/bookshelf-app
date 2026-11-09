@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Genre;
 use App\Models\Review;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
@@ -46,9 +47,8 @@ class ReportController extends Controller
     /**
      * Build the authenticated user's top-rated book list.
      *
-     * All reviews are grouped by book. Using their average as the book's
-     * rating and the tie-break order are provisional specifications pending
-     * coach confirmation, so they are kept together for easy replacement.
+     * Group all reviews by book, rank them by average rating, and use the
+     * latest review date and review ID as tie-breakers.
      *
      * @param  Collection<int, Review>  $reviews
      * @return Collection<int, array{id: int, title: string, author: string, rating: float}>
@@ -87,7 +87,11 @@ class ReportController extends Controller
     }
 
     /**
-     * Compare reviews by the provisional latest-review rule.
+     * Compare reviews by newest creation time, then by highest review ID.
+     *
+     * @param  Review  $left  The left-hand review.
+     * @param  Review  $right  The right-hand review.
+     * @return int A negative, zero, or positive comparison result.
      */
     private function compareReviewRecency(Review $left, Review $right): int
     {
@@ -99,8 +103,7 @@ class ReportController extends Controller
      * Aggregate the authenticated user's reviews by book genre.
      *
      * Reviews for books with multiple genres count once toward every genre.
-     * The minimum count and tie-break rules are provisional specifications
-     * pending coach confirmation, so they are isolated in this method.
+     * Equal averages are ordered by review count, then by genre ID.
      *
      * @param  Collection<int, Review>  $reviews
      * @return Collection<int, array{id: int, name: string, average_rating: float, count: int}>
@@ -109,7 +112,7 @@ class ReportController extends Controller
     {
         return $reviews
             ->flatMap(fn (Review $review): Collection => $review->book->genres->map(
-                fn ($genre): array => [
+                fn (Genre $genre): array => [
                     'genre' => $genre,
                     'rating' => $review->rating,
                 ]

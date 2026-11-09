@@ -21,7 +21,7 @@ class StoreBookRequest extends ApiFormRequest
     public function messages(): array
     {
         return [
-            'title.required' => 'タイトルを入力してください。',
+            'title.required' => 'タイトルは必須です。',
             'title.string' => 'タイトルは文字列で入力してください。',
             'title.max' => 'タイトルは255文字以内で入力してください。',
             'author.required' => '著者名を入力してください。',

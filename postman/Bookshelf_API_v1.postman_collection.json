@@ -249,7 +249,7 @@
             "url": { "raw": "{{baseUrl}}/api/v1/books/:book_id", "host": ["{{baseUrl}}"], "path": ["api", "v1", "books", ":book_id"], "variable": [{ "key": "book_id", "value": "{{protectedBookId}}", "description": "bearerTokenのユーザーが所有する書籍ID" }] },
             "description": "別ユーザーのTokenで所有者の書籍を更新しようとします。認可がバリデーションより先に拒否します。期待HTTPステータス: 403"
           },
-          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('HTTP 403', () => pm.response.to.have.status(403));", "pm.test('日本語の認可エラー', () => pm.expect(pm.response.json()).to.eql({error: 'この操作を行う権限がありません。'}));"] } }]
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('HTTP 403', () => pm.response.to.have.status(403));", "pm.test('日本語の認可エラー', () => pm.expect(pm.response.json()).to.eql({error: 'この操作を実行する権限がありません。'}));"] } }]
         },
         {
           "name": "DELETE 非所有者 [403]",
@@ -260,7 +260,7 @@
             "url": { "raw": "{{baseUrl}}/api/v1/books/:book_id", "host": ["{{baseUrl}}"], "path": ["api", "v1", "books", ":book_id"], "variable": [{ "key": "book_id", "value": "{{protectedBookId}}", "description": "bearerTokenのユーザーが所有する書籍ID" }] },
             "description": "別ユーザーのTokenで所有者の書籍を削除しようとします。期待HTTPステータス: 403"
           },
-          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('HTTP 403', () => pm.response.to.have.status(403));", "pm.test('日本語の認可エラー', () => pm.expect(pm.response.json()).to.eql({error: 'この操作を行う権限がありません。'}));"] } }]
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('HTTP 403', () => pm.response.to.have.status(403));", "pm.test('日本語の認可エラー', () => pm.expect(pm.response.json()).to.eql({error: 'この操作を実行する権限がありません。'}));"] } }]
         }
       ]
     },
