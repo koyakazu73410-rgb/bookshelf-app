@@ -18,6 +18,11 @@ class SearchBookByIsbnRequest extends FormRequest
         $this->merge(['isbn' => $this->route('isbn')]);
     }
 
+    /**
+     * Get the validation rules that apply to the request.
+     *
+     * @return array<string, list<string>>
+     */
     public function rules(): array
     {
         return [
@@ -25,6 +30,11 @@ class SearchBookByIsbnRequest extends FormRequest
         ];
     }
 
+    /**
+     * Get custom validation messages.
+     *
+     * @return array<string, string>
+     */
     public function messages(): array
     {
         return [

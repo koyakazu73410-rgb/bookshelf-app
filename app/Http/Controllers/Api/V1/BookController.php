@@ -101,7 +101,9 @@ class BookController extends Controller
     public function destroy(Book $book): JsonResponse
     {
         $this->authorize('delete', $book);
-        $book->delete();
+        DB::transaction(function () use ($book): void {
+            $book->delete();
+        });
 
         return response()->json(null, 204);
     }

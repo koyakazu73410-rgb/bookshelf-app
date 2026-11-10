@@ -1,5 +1,7 @@
 # Bookshelf
 
+作成者：小谷野 一輝
+
 書籍の登録・レビュー・お気に入り・ランキング・読書計画・通知・マイ読書レポートを管理するLaravelアプリケーションです。書籍登録画面ではGoogle Books APIを利用したISBN検索にも対応しています。
 
 ## 使用技術
@@ -180,19 +182,95 @@ GOOGLE_BOOKS_API_KEY=<取得したAPIキー>
 
 新しいMigrationが追加された場合は、DBバックアップと`migrate:status`を確認してから個別に適用してください。通常起動のたびにMigrationやSeederを実行する必要はありません。
 
-## テスト
+### Laravel Schedulerの起動方法
 
-`phpunit.xml`ではテストDBをSQLiteインメモリDBに固定しています。
+本アプリケーションでは、以下の2つのCommandをLaravel Schedulerに登録しています。
+
+| Command | 処理内容 | 実行時刻 |
+|---|---|---|
+| `reading-plans:expire` | 期限を過ぎた読書計画を「期限切れ」に更新 | 毎日20:00 |
+| `reading-plans:remind` | 読書計画のリマインダー通知を生成 | 毎日20:00 |
+
+タイムゾーンは`Asia/Tokyo`です。
+
+#### 1. スケジュール登録状況を確認
+
+```bash
+./vendor/bin/sail artisan schedule:list
+```
+
+#### 2. 開発環境でSchedulerを起動
+
+別のターミナルで以下を実行します。
+
+```bash
+./vendor/bin/sail artisan schedule:work
+```
+
+このコマンドを実行し続けることで、Laravelが毎分スケジュールを確認し、毎日20:00になると登録されたCommandを実行します。
+
+※Laravel SailコンテナとSchedulerのプロセスが起動している必要があります。ターミナルを閉じるなどして` schedule:work`が停止すると、自動実行されません。
+
+#### 3. Commandを手動実行する場合
+
+期限切れ更新：
+
+```bash
+./vendor/bin/sail artisan reading-plans:expire
+```
+
+リマインダー通知：
+
+```bash
+./vendor/bin/sail artisan reading-plans:remind
+```
+
+※手動実行すると開発用DBの読書計画・通知データが実際に更新されるため、必要な場合だけ実行してください。
+
+#### 本番環境での運用
+
+本番環境では、Cronなどを使用してLaravelの`schedule:run`を毎分実行する構成が一般的です。開発環境の`schedule:work`とは異なり、サーバー側で継続的にスケジュールを起動する設定が必要です。
+
+## テストの実行方法
+
+本アプリケーションでは、PHPUnitを使用してUnitテスト・Featureテストを実施しています。
+
+テスト用データベースにはSQLiteインメモリDBを使用し、`phpunit.xml`で接続先を設定しています。
+
+### 全テストの実行
+
+Laravel Sailを起動した状態で、以下を実行します。
 
 ```bash
 ./vendor/bin/sail artisan test
 ```
 
-コードスタイルの確認にはLaravel Pintを使用します。
+### 特定のテストの実行
+
+例：書籍APIのテスト
+
+```bash
+./vendor/bin/sail artisan test --filter=BookApiTest
+```
+
+### コードスタイルの確認
+
+Laravel Pintを使用します。
 
 ```bash
 ./vendor/bin/sail pint --test
 ```
+
+### コードカバレッジ
+
+PCOVなどのカバレッジドライバーが利用できる環境では、以下で計測できます。
+
+```bash
+./vendor/bin/sail artisan test --coverage
+```
+
+※カバレッジドライバーがない環境では計測できません。最終計測ではネットワーク非接続の隔離Docker環境とPCOVを使用しました。
+
 
 ## 主なサービスとポート
 
@@ -346,4 +424,24 @@ ISBN形式不正、検索結果なし、利用制限、APIキー未設定、通�
 
 ## 設計資料
 
-現時点では、リポジトリ内にER図や画面キャプチャなどの画像ファイルは含まれていません。Model間の関連は「主要Modelとリレーション」を参照してください。
+### ER図
+
+![Bookshelf ER図](docs/er-diagram.png)
+
+### 画面キャプチャ
+
+#### 書籍一覧画面
+
+<img src="docs/book-list.png" alt="書籍一覧画面" width="700">
+
+#### 書籍詳細画面
+
+<img src="docs/book-detail.png" alt="書籍詳細画面" width="700">
+
+#### 読書計画画面
+
+<img src="docs/reading-plans.png" alt="読書計画画面" width="700">
+
+#### マイ読書レポート画面
+
+<img src="docs/my-report.png" alt="マイ読書レポート画面" width="700">

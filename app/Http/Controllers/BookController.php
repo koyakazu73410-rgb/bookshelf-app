@@ -71,6 +71,12 @@ class BookController extends Controller
         return view('books.create', compact('genres'));
     }
 
+    /**
+     * Search Google Books by ISBN and return normalized form values.
+     *
+     * Returns a JSON response for a successful match, no matching book,
+     * rate-limit or configuration errors, and external API failures.
+     */
     public function searchByIsbn(
         SearchBookByIsbnRequest $request,
         GoogleBooksService $googleBooks
@@ -240,7 +246,9 @@ class BookController extends Controller
 
         $this->authorize('delete', $book);
 
-        $book->delete();
+        DB::transaction(function () use ($book): void {
+            $book->delete();
+        });
 
         return redirect()
             ->route('books.index')

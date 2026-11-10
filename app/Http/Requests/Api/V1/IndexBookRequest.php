@@ -4,6 +4,11 @@ namespace App\Http\Requests\Api\V1;
 
 class IndexBookRequest extends ApiFormRequest
 {
+    /**
+     * Get the validation rules that apply to the request.
+     *
+     * @return array<string, list<string>>
+     */
     public function rules(): array
     {
         return [
@@ -14,6 +19,11 @@ class IndexBookRequest extends ApiFormRequest
         ];
     }
 
+    /**
+     * Get custom validation messages.
+     *
+     * @return array<string, string>
+     */
     public function messages(): array
     {
         return [
