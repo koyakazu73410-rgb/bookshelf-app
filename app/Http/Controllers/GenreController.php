@@ -10,6 +10,9 @@ use Illuminate\View\View;
 
 class GenreController extends Controller
 {
+    /**
+     * Display genres with their associated book counts.
+     */
     public function index(): View
     {
         $genres = Genre::withCount('books')->get();
@@ -17,11 +20,17 @@ class GenreController extends Controller
         return view('genres.index', compact('genres'));
     }
 
+    /**
+     * Display the genre creation form.
+     */
     public function create(): View
     {
         return view('genres.create');
     }
 
+    /**
+     * Store a newly created genre.
+     */
     public function store(StoreGenreRequest $request): RedirectResponse
     {
         Genre::create($request->validated());
@@ -30,6 +39,9 @@ class GenreController extends Controller
             ->with('success', 'ジャンルを登録しました。');
     }
 
+    /**
+     * Display a genre and its books.
+     */
     public function show(Genre $genre): View
     {
         $books = $genre->books()->with('genres')->paginate(10);
@@ -37,11 +49,17 @@ class GenreController extends Controller
         return view('genres.show', compact('genre', 'books'));
     }
 
+    /**
+     * Display the genre editing form.
+     */
     public function edit(Genre $genre): View
     {
         return view('genres.edit', compact('genre'));
     }
 
+    /**
+     * Update the specified genre.
+     */
     public function update(UpdateGenreRequest $request, Genre $genre): RedirectResponse
     {
         $genre->update($request->validated());
@@ -50,6 +68,9 @@ class GenreController extends Controller
             ->with('success', 'ジャンルを更新しました。');
     }
 
+    /**
+     * Delete a genre when it is not associated with any books.
+     */
     public function destroy(Genre $genre): RedirectResponse
     {
         if ($genre->books()->exists()) {

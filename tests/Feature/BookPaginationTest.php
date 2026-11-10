@@ -27,7 +27,6 @@ class BookPaginationTest extends TestCase
             'user_id' => $user->id,
         ]);
 
-
         $response = $this->get(route('books.index'));
 
         $response->assertStatus(200);
@@ -42,6 +41,6 @@ class BookPaginationTest extends TestCase
 
         $response->assertViewHas('books', function ($books) {
             return $books->count() === 1;
-            });
+        });
     }
 }

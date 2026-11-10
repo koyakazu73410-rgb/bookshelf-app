@@ -5,7 +5,6 @@ namespace Tests\Feature;
 use App\Models\Book;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Foundation\Testing\WithFaker;
 use Tests\TestCase;
 
 class BookDeleteTest extends TestCase
@@ -19,7 +18,7 @@ class BookDeleteTest extends TestCase
         $this->actingAs($user);
 
         $book = Book::factory()->create([
-            'user_id' => $user->id
+            'user_id' => $user->id,
         ]);
 
         $response = $this->delete(

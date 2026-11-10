@@ -3,6 +3,8 @@
 namespace App\Exceptions;
 
 use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
+use Illuminate\Http\Request;
+use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 use Throwable;
 
 class Handler extends ExceptionHandler
@@ -23,6 +25,14 @@ class Handler extends ExceptionHandler
      */
     public function register(): void
     {
+        $this->renderable(function (AccessDeniedHttpException $exception, Request $request) {
+            if ($request->is('api/v1/books*')) {
+                return response()->json([
+                    'error' => 'この操作を実行する権限がありません。',
+                ], 403);
+            }
+        });
+
         $this->reportable(function (Throwable $e) {
             //
         });

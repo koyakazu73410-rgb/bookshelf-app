@@ -2,8 +2,8 @@
 
 namespace Tests\Feature;
 
-use App\Models\User;
 use App\Models\Genre;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -18,7 +18,7 @@ class GenreUpdateTest extends TestCase
         $this->actingAs($user);
 
         $genre = Genre::factory()->create([
-        'name' => '旧ジャンル名',
+            'name' => '旧ジャンル名',
         ]);
 
         $data = [

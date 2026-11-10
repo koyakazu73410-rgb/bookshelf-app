@@ -11,6 +11,11 @@ class StoreGenreRequest extends FormRequest
         return true;
     }
 
+    /**
+     * Get the validation rules that apply to the request.
+     *
+     * @return array<string, list<string>>
+     */
     public function rules(): array
     {
         return [
@@ -18,6 +23,11 @@ class StoreGenreRequest extends FormRequest
         ];
     }
 
+    /**
+     * Get custom validation messages.
+     *
+     * @return array<string, string>
+     */
     public function messages(): array
     {
         return [

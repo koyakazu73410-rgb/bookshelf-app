@@ -15,6 +15,9 @@ use Illuminate\Support\Facades\DB;
 
 class BookController extends Controller
 {
+    /**
+     * Return a filtered and paginated collection of books.
+     */
     public function index(IndexBookRequest $request): AnonymousResourceCollection
     {
         $validated = $request->validated();
@@ -39,6 +42,9 @@ class BookController extends Controller
         return BookResource::collection($books);
     }
 
+    /**
+     * Return the specified book with its related data.
+     */
     public function show(Book $book): BookResource
     {
         $book->load(['genres', 'reviews.user'])
@@ -48,13 +54,17 @@ class BookController extends Controller
         return new BookResource($book);
     }
 
+    /**
+     * Store a book owned by the authenticated API user.
+     */
     public function store(StoreBookRequest $request): JsonResponse
     {
         $validated = $request->validated();
         $genres = $validated['genres'];
         unset($validated['genres']);
+        $validated['user_id'] = $request->user()->id;
 
-        $book = DB::transaction(function () use ($validated, $genres) {
+        $book = DB::transaction(function () use ($validated, $genres): Book {
             $book = Book::create($validated);
             $book->genres()->sync($genres);
 
@@ -66,13 +76,16 @@ class BookController extends Controller
         return (new BookResource($book))->response()->setStatusCode(201);
     }
 
+    /**
+     * Update the specified book and synchronize its genres.
+     */
     public function update(UpdateBookRequest $request, Book $book): BookResource
     {
         $validated = $request->validated();
         $genres = $validated['genres'];
         unset($validated['genres']);
 
-        DB::transaction(function () use ($book, $validated, $genres) {
+        DB::transaction(function () use ($book, $validated, $genres): void {
             $book->update($validated);
             $book->genres()->sync($genres);
         });
@@ -82,13 +95,22 @@ class BookController extends Controller
         return new BookResource($book);
     }
 
+    /**
+     * Delete the specified book after policy authorization.
+     */
     public function destroy(Book $book): JsonResponse
     {
-        $book->delete();
+        $this->authorize('delete', $book);
+        DB::transaction(function () use ($book): void {
+            $book->delete();
+        });
 
         return response()->json(null, 204);
     }
 
+    /**
+     * Load relationships and aggregates used by the API resource.
+     */
     private function loadResourceRelations(Book $book): void
     {
         $book->load('genres')

@@ -4,14 +4,18 @@ namespace App\Http\Requests\Api\V1;
 
 class StoreBookRequest extends ApiFormRequest
 {
+    /**
+     * Get the validation rules that apply to the request.
+     *
+     * @return array<string, list<string>>
+     */
     public function rules(): array
     {
         return [
-            'user_id' => ['required', 'integer', 'exists:users,id'],
             'title' => ['required', 'string', 'max:255'],
             'author' => ['required', 'string', 'max:255'],
-            'isbn' => ['required', 'digits:13', 'unique:books,isbn'],
-            'published_date' => ['required', 'date'],
+            'isbn' => ['nullable', 'digits:13', 'unique:books,isbn'],
+            'published_date' => ['nullable', 'date'],
             'description' => ['nullable', 'string'],
             'image_url' => ['nullable', 'url', 'max:2048'],
             'genres' => ['required', 'array', 'min:1'],
@@ -19,13 +23,15 @@ class StoreBookRequest extends ApiFormRequest
         ];
     }
 
+    /**
+     * Get custom validation messages.
+     *
+     * @return array<string, string>
+     */
     public function messages(): array
     {
         return [
-            'user_id.required' => '登録者IDを入力してください。',
-            'user_id.integer' => '登録者IDは整数で入力してください。',
-            'user_id.exists' => '指定された登録者が存在しません。',
-            'title.required' => 'タイトルを入力してください。',
+            'title.required' => 'タイトルは必須です。',
             'title.string' => 'タイトルは文字列で入力してください。',
             'title.max' => 'タイトルは255文字以内で入力してください。',
             'author.required' => '著者名を入力してください。',

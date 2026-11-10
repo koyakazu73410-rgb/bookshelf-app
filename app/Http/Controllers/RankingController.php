@@ -7,6 +7,9 @@ use Illuminate\View\View;
 
 class RankingController extends Controller
 {
+    /**
+     * Display up to ten reviewed books ordered by average rating.
+     */
     public function index(): View
     {
         $rankedBooks = Book::with('genres')
