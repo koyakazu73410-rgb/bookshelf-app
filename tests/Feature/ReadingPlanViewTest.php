@@ -111,7 +111,7 @@ class ReadingPlanViewTest extends TestCase
 
         $this->get(route('reading-plans.create'))
             ->assertOk()
-            ->assertSee('目標日は本日以降の日付を入力してください。')
+            ->assertSee('期日は今日以降の日付を指定してください。')
             ->assertSee('value="2026-10-19"', false)
             ->assertSee("value=\"{$book->id}\" selected", false);
     }

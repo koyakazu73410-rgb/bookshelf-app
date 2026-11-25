@@ -82,4 +82,18 @@ class AuthenticationLifecycleTest extends TestCase
 
         $this->assertGuest();
     }
+
+    public function test_authenticated_user_is_redirected_from_login_and_register_to_home(): void
+    {
+        $user = User::factory()->create();
+
+        $this->actingAs($user)
+            ->get(route('login'))
+            ->assertRedirect(route('home'));
+        $this->assertAuthenticatedAs($user);
+
+        $this->get(route('register'))
+            ->assertRedirect(route('home'));
+        $this->assertAuthenticatedAs($user);
+    }
 }

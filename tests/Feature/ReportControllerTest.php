@@ -114,11 +114,11 @@ class ReportControllerTest extends TestCase
                 && $stats['rating_distribution']->all() === [0, 0, 0, 0, 0]
             )
             ->assertSee('data-testid="average-rating"', false)
-            ->assertSee('レビューした書籍がありません')
+            ->assertSee('平均評価4.0以上の書籍がありません')
             ->assertSee('ジャンルが設定された書籍のレビューがありません');
     }
 
-    public function test_top_rated_books_include_books_with_average_rating_below_four(): void
+    public function test_top_rated_books_include_average_four_and_exclude_average_three(): void
     {
         $user = User::factory()->create();
         $highRatedBook = Book::factory()->create(['title' => '高評価書籍']);
@@ -130,11 +130,10 @@ class ReportControllerTest extends TestCase
             ->get(route('reports.index'))
             ->assertViewHas('stats', fn (array $stats): bool => $stats['top_rated_books']->pluck('id')->all() === [
                 $highRatedBook->id,
-                $lowRatedBook->id,
             ]
             )
             ->assertSee('高評価書籍')
-            ->assertSee('低評価書籍');
+            ->assertDontSee('低評価書籍');
     }
 
     public function test_top_rated_books_are_ordered_by_rating_descending(): void
@@ -158,7 +157,7 @@ class ReportControllerTest extends TestCase
     {
         $user = User::factory()->create();
         $books = Book::factory()->count(6)->create();
-        $ratings = [5, 5, 4, 4, 3, 1];
+        $ratings = [5, 5, 5, 5, 5, 4];
 
         $books->each(fn (Book $book, int $index) => Review::factory()->for($user)->for($book)->create([
             'rating' => $ratings[$index],
@@ -178,7 +177,7 @@ class ReportControllerTest extends TestCase
         $books = Book::factory()->count(5)->create();
 
         $books->each(fn (Book $book, int $index) => Review::factory()->for($user)->for($book)->create([
-            'rating' => ($index % 5) + 1,
+            'rating' => $index === 0 ? 5 : 4,
         ])
         );
 
@@ -210,7 +209,7 @@ class ReportControllerTest extends TestCase
             );
     }
 
-    public function test_top_rated_books_include_book_when_all_review_average_is_below_four(): void
+    public function test_top_rated_books_exclude_book_when_all_review_average_is_below_four(): void
     {
         $user = User::factory()->create();
         $book = Book::factory()->create();
@@ -225,11 +224,9 @@ class ReportControllerTest extends TestCase
 
         $this->actingAs($user)
             ->get(route('reports.index'))
-            ->assertViewHas('stats', fn (array $stats): bool => $stats['top_rated_books']->count() === 1
-                && $stats['top_rated_books']->first()['id'] === $book->id
-                && $stats['top_rated_books']->first()['rating'] === 3.0
+            ->assertViewHas('stats', fn (array $stats): bool => $stats['top_rated_books']->isEmpty()
             )
-            ->assertDontSee('レビューした書籍がありません');
+            ->assertSee('平均評価4.0以上の書籍がありません');
     }
 
     public function test_top_rated_books_exclude_other_users_reviews(): void

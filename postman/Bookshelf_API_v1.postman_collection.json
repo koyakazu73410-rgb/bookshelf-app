@@ -137,7 +137,7 @@
             "url": { "raw": "{{baseUrl}}/api/v1/books/:book_id", "host": ["{{baseUrl}}"], "path": ["api", "v1", "books", ":book_id"], "variable": [{ "key": "book_id", "value": "{{missingBookId}}" }] },
             "description": "存在しない書籍IDを指定します。期待HTTPステータス: 404"
           },
-          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('HTTP 404', () => pm.response.to.have.status(404));", "pm.test('書籍なしエラー', () => pm.expect(pm.response.json().error).to.eql('書籍が見つかりません。'));"] } }]
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('HTTP 404', () => pm.response.to.have.status(404));", "pm.test('書籍なしエラー', () => pm.expect(pm.response.json().error).to.eql('書籍が見つかりませんでした。'));"] } }]
         },
         {
           "name": "POST 必須項目不足 [422]",

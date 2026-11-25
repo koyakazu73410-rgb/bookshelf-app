@@ -53,7 +53,7 @@ class StoreReadingPlanRequest extends FormRequest
             if ($hasInProgressPlan) {
                 $validator->errors()->add(
                     'book_id',
-                    'この書籍には進行中の読書計画がすでに登録されています。'
+                    'この書籍は既に進行中の読書計画が存在します。'
                 );
             }
         });
@@ -70,9 +70,9 @@ class StoreReadingPlanRequest extends FormRequest
             'book_id.required' => '書籍を選択してください。',
             'book_id.integer' => '書籍の値が正しくありません。',
             'book_id.exists' => '選択された書籍が存在しません。',
-            'target_date.required' => '目標日を入力してください。',
-            'target_date.date' => '目標日は正しい日付で入力してください。',
-            'target_date.after_or_equal' => '目標日は本日以降の日付を入力してください。',
+            'target_date.required' => '期日は必須です。',
+            'target_date.date' => '期日は有効な日付形式で入力してください。',
+            'target_date.after_or_equal' => '期日は今日以降の日付を指定してください。',
             'status.prohibited' => 'ステータスは指定できません。',
         ];
     }
