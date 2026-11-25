@@ -121,20 +121,29 @@ class BookApiValidationTest extends TestCase
         $this->assertDatabaseCount('books', 1);
     }
 
-    public function test_show_update_and_delete_return_json_404_for_missing_book(): void
+    public function test_show_returns_json_404_for_missing_book(): void
     {
         $this->getJson('/api/v1/books/999999')
             ->assertNotFound()
-            ->assertExactJson(['error' => '書籍が見つかりません。']);
+            ->assertExactJson(['error' => '書籍が見つかりませんでした。']);
+    }
 
+    public function test_update_returns_json_404_for_missing_book(): void
+    {
         Sanctum::actingAs(User::factory()->create());
 
-        foreach (['putJson', 'deleteJson'] as $method) {
-            $response = $this->{$method}('/api/v1/books/999999');
+        $this->putJson('/api/v1/books/999999')
+            ->assertNotFound()
+            ->assertExactJson(['error' => '書籍が見つかりませんでした。']);
+    }
 
-            $response->assertNotFound()
-                ->assertExactJson(['error' => '書籍が見つかりません。']);
-        }
+    public function test_delete_returns_json_404_for_missing_book(): void
+    {
+        Sanctum::actingAs(User::factory()->create());
+
+        $this->deleteJson('/api/v1/books/999999')
+            ->assertNotFound()
+            ->assertExactJson(['error' => '書籍が見つかりませんでした。']);
     }
 
     public function test_update_rejects_another_books_isbn(): void

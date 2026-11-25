@@ -155,6 +155,33 @@ class ReadingPlanControllerTest extends TestCase
         $this->assertSame('2026-10-21', $readingPlan->fresh()->target_date->toDateString());
     }
 
+    public function test_expired_plan_cannot_return_to_in_progress_when_another_in_progress_plan_exists(): void
+    {
+        Carbon::setTestNow('2026-10-20 10:00:00');
+        $owner = User::factory()->create();
+        $book = Book::factory()->create();
+        $expiredPlan = ReadingPlan::factory()->for($owner)->for($book)->create([
+            'target_date' => '2026-10-19',
+            'status' => ReadingPlanStatus::Expired,
+        ]);
+        ReadingPlan::factory()->for($owner)->for($book)->create([
+            'target_date' => '2026-10-25',
+            'status' => ReadingPlanStatus::InProgress,
+        ]);
+
+        $this->actingAs($owner)
+            ->put(route('reading-plans.update', $expiredPlan), [
+                'target_date' => '2026-10-21',
+            ])
+            ->assertSessionHasErrors([
+                'target_date' => 'この書籍は既に進行中の読書計画が存在します。',
+            ]);
+
+        $expiredPlan->refresh();
+        $this->assertSame('2026-10-19', $expiredPlan->target_date->toDateString());
+        $this->assertSame(ReadingPlanStatus::Expired, $expiredPlan->status);
+    }
+
     public function test_owner_can_complete_plan_and_completed_at_is_recorded(): void
     {
         Carbon::setTestNow('2026-10-20 15:30:45');

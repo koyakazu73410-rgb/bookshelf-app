@@ -47,8 +47,9 @@ class ReportController extends Controller
     /**
      * Build the authenticated user's top-rated book list.
      *
-     * Group all reviews by book, rank them by average rating, and use the
-     * latest review date and review ID as tie-breakers.
+     * Group all reviews by book, keep books averaging at least four stars,
+     * rank them by average rating, and use the latest review date and review
+     * ID as tie-breakers.
      *
      * @param  Collection<int, Review>  $reviews
      * @return Collection<int, array{id: int, title: string, author: string, rating: float}>
@@ -71,6 +72,7 @@ class ReportController extends Controller
                     'latest_review_id' => $latestReview->id,
                 ];
             })
+            ->filter(fn (array $book): bool => $book['rating'] >= 4.0)
             ->sort(function (array $left, array $right): int {
                 return ($right['rating'] <=> $left['rating'])
                     ?: ($right['latest_reviewed_at'] <=> $left['latest_reviewed_at'])

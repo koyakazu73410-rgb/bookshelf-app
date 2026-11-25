@@ -93,7 +93,7 @@
                                 @endforeach
                             </div>
                         @else
-                            <p class="text-gray-500 text-center py-8">レビューした書籍がありません</p>
+                            <p class="text-gray-500 text-center py-8">平均評価4.0以上の書籍がありません</p>
                         @endif
                     </div>
                 </div>

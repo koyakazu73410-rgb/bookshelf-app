@@ -17,13 +17,13 @@ use Illuminate\Support\Facades\Route;
 Route::prefix('v1')->group(function () {
     Route::get('/books', [BookController::class, 'index']);
     Route::get('/books/{book}', [BookController::class, 'show'])
-        ->missing(fn () => response()->json(['error' => '書籍が見つかりません。'], 404));
+        ->missing(fn () => response()->json(['error' => '書籍が見つかりませんでした。'], 404));
 
     Route::middleware('auth:sanctum')->group(function () {
         Route::post('/books', [BookController::class, 'store']);
         Route::put('/books/{book}', [BookController::class, 'update'])
-            ->missing(fn () => response()->json(['error' => '書籍が見つかりません。'], 404));
+            ->missing(fn () => response()->json(['error' => '書籍が見つかりませんでした。'], 404));
         Route::delete('/books/{book}', [BookController::class, 'destroy'])
-            ->missing(fn () => response()->json(['error' => '書籍が見つかりません。'], 404));
+            ->missing(fn () => response()->json(['error' => '書籍が見つかりませんでした。'], 404));
     });
 });

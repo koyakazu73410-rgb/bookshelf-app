@@ -64,6 +64,35 @@ class ReadingPlanRequestTest extends TestCase
             ->assertJsonValidationErrors('target_date');
     }
 
+    public function test_store_returns_the_required_exact_validation_messages(): void
+    {
+        Carbon::setTestNow('2026-10-20 10:00:00');
+        $user = User::factory()->create();
+        $book = Book::factory()->create();
+
+        $this->actingAs($user)
+            ->postJson('/_testing/reading-plans', [])
+            ->assertUnprocessable()
+            ->assertJsonPath('errors.book_id.0', '書籍を選択してください。')
+            ->assertJsonPath('errors.target_date.0', '期日は必須です。');
+
+        $this->actingAs($user)
+            ->postJson('/_testing/reading-plans', [
+                'book_id' => $book->id,
+                'target_date' => 'invalid-date',
+            ])
+            ->assertUnprocessable()
+            ->assertJsonPath('errors.target_date.0', '期日は有効な日付形式で入力してください。');
+
+        $this->actingAs($user)
+            ->postJson('/_testing/reading-plans', [
+                'book_id' => $book->id,
+                'target_date' => '2026-10-19',
+            ])
+            ->assertUnprocessable()
+            ->assertJsonPath('errors.target_date.0', '期日は今日以降の日付を指定してください。');
+    }
+
     public function test_store_rejects_a_nonexistent_book(): void
     {
         $this->actingAs(User::factory()->create())
@@ -89,7 +118,11 @@ class ReadingPlanRequestTest extends TestCase
                 'target_date' => now()->addDay()->toDateString(),
             ])
             ->assertUnprocessable()
-            ->assertJsonValidationErrors('book_id');
+            ->assertJsonValidationErrors('book_id')
+            ->assertJsonPath(
+                'errors.book_id.0',
+                'この書籍は既に進行中の読書計画が存在します。'
+            );
     }
 
     public function test_store_allows_another_user_to_plan_the_same_book(): void
@@ -154,6 +187,47 @@ class ReadingPlanRequestTest extends TestCase
             ])
             ->assertUnprocessable()
             ->assertJsonValidationErrors(['book_id', 'status']);
+    }
+
+    public function test_update_does_not_treat_the_plan_itself_as_a_duplicate(): void
+    {
+        $owner = User::factory()->create();
+        $readingPlan = ReadingPlan::factory()->for($owner)->create([
+            'status' => ReadingPlanStatus::InProgress,
+        ]);
+
+        $this->actingAs($owner)
+            ->putJson("/_testing/reading-plans/{$readingPlan->id}", [
+                'target_date' => now()->addWeek()->toDateString(),
+            ])
+            ->assertOk()
+            ->assertJsonMissingValidationErrors('target_date');
+    }
+
+    public function test_update_returns_the_required_exact_validation_messages(): void
+    {
+        Carbon::setTestNow('2026-10-20 10:00:00');
+        $owner = User::factory()->create();
+        $readingPlan = ReadingPlan::factory()->for($owner)->create();
+
+        $this->actingAs($owner)
+            ->putJson("/_testing/reading-plans/{$readingPlan->id}", [])
+            ->assertUnprocessable()
+            ->assertJsonPath('errors.target_date.0', '期日は必須です。');
+
+        $this->actingAs($owner)
+            ->putJson("/_testing/reading-plans/{$readingPlan->id}", [
+                'target_date' => 'invalid-date',
+            ])
+            ->assertUnprocessable()
+            ->assertJsonPath('errors.target_date.0', '期日は有効な日付形式で入力してください。');
+
+        $this->actingAs($owner)
+            ->putJson("/_testing/reading-plans/{$readingPlan->id}", [
+                'target_date' => '2026-10-19',
+            ])
+            ->assertUnprocessable()
+            ->assertJsonPath('errors.target_date.0', '期日は今日以降の日付を指定してください。');
     }
 
     public function test_update_accepts_today_and_rejects_a_past_or_missing_target_date(): void

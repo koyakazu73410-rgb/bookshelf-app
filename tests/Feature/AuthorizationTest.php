@@ -58,6 +58,34 @@ class AuthorizationTest extends TestCase
         $this->assertDatabaseHas('books', ['id' => $book->id]);
     }
 
+    public function test_book_owner_can_view_edit_form_with_the_correct_book_and_genres(): void
+    {
+        $owner = User::factory()->create();
+        $book = Book::factory()->for($owner)->create([
+            'title' => '編集対象の書籍',
+            'author' => '編集対象の著者',
+            'isbn' => '9781234567890',
+        ]);
+        $selectedGenre = Genre::factory()->create(['name' => '選択済みジャンル']);
+        $otherGenre = Genre::factory()->create(['name' => '未選択ジャンル']);
+        $book->genres()->attach($selectedGenre);
+
+        $response = $this->actingAs($owner)->get(route('books.edit', $book));
+
+        $response->assertOk()
+            ->assertViewIs('books.edit')
+            ->assertViewHas('book', fn (Book $viewBook): bool => $viewBook->is($book))
+            ->assertViewHas('genres', fn ($genres): bool => $genres->contains($selectedGenre)
+                && $genres->contains($otherGenre))
+            ->assertSee('value="編集対象の書籍"', false)
+            ->assertSee('value="編集対象の著者"', false)
+            ->assertSee('value="9781234567890"', false)
+            ->assertSeeInOrder([
+                'value="'.$selectedGenre->id.'"',
+                'checked',
+            ], false);
+    }
+
     public function test_other_user_cannot_edit_update_or_delete_review(): void
     {
         $review = Review::factory()->create();
